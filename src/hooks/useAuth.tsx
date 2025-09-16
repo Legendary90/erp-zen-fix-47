@@ -5,6 +5,8 @@ import { toast } from '@/hooks/use-toast';
 interface AuthContextType {
   clientSession: string | null;
   adminSession: string | null;
+  user: any | null;
+  clientId: string | null;
   isLoading: boolean;
   loginAsClient: (username: string, password: string) => Promise<boolean>;
   loginAsAdmin: (username: string, password: string) => Promise<boolean>;
@@ -17,14 +19,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clientSession, setClientSession] = useState<string | null>(null);
   const [adminSession, setAdminSession] = useState<string | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing sessions
     const storedClientSession = localStorage.getItem('client_session');
     const storedAdminSession = localStorage.getItem('admin_session');
+    const storedClientId = localStorage.getItem('current_client_id');
     
-    if (storedClientSession) setClientSession(storedClientSession);
+    if (storedClientSession) {
+      setClientSession(storedClientSession);
+      if (storedClientId) {
+        setClientId(storedClientId);
+        setUser({ client_id: storedClientId });
+      }
+    }
     if (storedAdminSession) setAdminSession(storedAdminSession);
     
     setIsLoading(false);
@@ -61,6 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('client_session', sessionId);
       localStorage.setItem('current_client_id', client.client_id);
       setClientSession(sessionId);
+      setClientId(client.client_id);
+      setUser(client);
 
       toast({
         title: "Login Successful",
@@ -178,6 +191,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('current_client_id');
     setClientSession(null);
     setAdminSession(null);
+    setUser(null);
+    setClientId(null);
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out"
@@ -188,6 +203,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       clientSession,
       adminSession,
+      user,
+      clientId,
       isLoading,
       loginAsClient,
       loginAsAdmin,
