@@ -1,11 +1,66 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            ERP Management System
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Comprehensive business management solution for sales, inventory, expenses, and reporting.
+          </p>
+          
+          <div className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Access</CardTitle>
+                <CardDescription>Access your business dashboard</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to="/auth">
+                  <Button className="w-full">Client Login / Register</Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Panel</CardTitle>
+                <CardDescription>Manage clients and system settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to="/admin">
+                  <Button variant="outline" className="w-full">Admin Access</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-12 grid gap-4 md:grid-cols-4 max-w-4xl mx-auto">
+            <div className="text-center">
+              <h3 className="font-semibold mb-2">Sales Management</h3>
+              <p className="text-sm text-muted-foreground">Track revenue and transactions</p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-2">Inventory Control</h3>
+              <p className="text-sm text-muted-foreground">Manage stock and items</p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-2">Expense Tracking</h3>
+              <p className="text-sm text-muted-foreground">Monitor business costs</p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-2">Reports & Analytics</h3>
+              <p className="text-sm text-muted-foreground">Profit/loss insights</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
