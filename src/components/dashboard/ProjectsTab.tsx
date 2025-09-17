@@ -215,7 +215,7 @@ export function ProjectsTab() {
                   View Items
                 </Button>
                 <div className="text-xs text-muted-foreground mt-2">
-                  Scanner features coming soon...
+                  Manual entry available
                 </div>
               </div>
             </CardContent>

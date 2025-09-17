@@ -155,7 +155,7 @@ export function FinancialRecordsSection() {
         <Card>
           <CardHeader>
             <CardTitle>Document Upload</CardTitle>
-            <CardDescription>Upload scanned documents and receipts</CardDescription>
+            <CardDescription>Upload documents and receipts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">

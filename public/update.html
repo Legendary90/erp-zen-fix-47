@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>InviX Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+        .container {
+            max-width: 350px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007acc;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>InviX ERP Update</h3>
+        <div id="status" class="status">Checking for updates...</div>
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="progress-text">0%</div>
+        <div>
+            <button id="install-btn" onclick="installUpdate()" disabled>Install & Restart</button>
+            <button id="later-btn" onclick="installLater()">Install Later</button>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        let updateDownloaded = false;
+
+        ipcRenderer.on('update-available', (event, info) => {
+            document.getElementById('status').textContent = 'Update available. Downloading...';
+        });
+
+        ipcRenderer.on('download-progress', (event, progress) => {
+            const percent = Math.round(progress.percent);
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-text').textContent = percent + '%';
+            document.getElementById('status').textContent = `Downloading update... ${percent}%`;
+        });
+
+        ipcRenderer.on('update-downloaded', (event, info) => {
+            updateDownloaded = true;
+            document.getElementById('status').textContent = 'Update downloaded. Ready to install.';
+            document.getElementById('install-btn').disabled = false;
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-text').textContent = '100%';
+        });
+
+        function installUpdate() {
+            if (updateDownloaded) {
+                ipcRenderer.send('restart-app');
+            }
+        }
+
+        function installLater() {
+            ipcRenderer.send('close-update-window');
+        }
+    </script>
+</body>
+</html>

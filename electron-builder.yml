@@ -1,0 +1,35 @@
+appId: com.invix.erp
+productName: InviX ERP System
+directories:
+  output: release
+files:
+  - dist/**/*
+  - public/electron.js
+  - public/preload.js
+  - public/update.html
+  - public/icons/**/*
+  - node_modules/**/*
+extraResources:
+  - public/icons/**/*
+win:
+  target: nsis
+  icon: public/icons/app-icon.ico
+  requestedExecutionLevel: asInvoker
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: InviX ERP
+mac:
+  target: dmg
+  icon: public/icons/app-icon.icns
+  category: public.app-category.business
+linux:
+  target: AppImage
+  icon: public/icons/app-icon.png
+  category: Office
+publish:
+  provider: github
+  owner: your-github-username
+  repo: invix-erp
