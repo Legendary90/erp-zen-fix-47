@@ -142,11 +142,14 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_data_backup: string | null
           last_login: string | null
           password_hash: string
           phone: string | null
           subscription_end: string
+          subscription_end_date: string | null
           subscription_start: string
+          subscription_start_date: string | null
           subscription_status: string
           updated_at: string
           username: string
@@ -159,11 +162,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_data_backup?: string | null
           last_login?: string | null
           password_hash: string
           phone?: string | null
           subscription_end?: string
+          subscription_end_date?: string | null
           subscription_start?: string
+          subscription_start_date?: string | null
           subscription_status?: string
           updated_at?: string
           username: string
@@ -176,11 +182,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_data_backup?: string | null
           last_login?: string | null
           password_hash?: string
           phone?: string | null
           subscription_end?: string
+          subscription_end_date?: string | null
           subscription_start?: string
+          subscription_start_date?: string | null
           subscription_status?: string
           updated_at?: string
           username?: string
@@ -572,6 +581,14 @@ export type Database = {
       auto_expire_subscriptions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      check_expired_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      extend_client_subscription: {
+        Args: { p_client_id: string; p_months?: number }
+        Returns: boolean
       }
       generate_client_id: {
         Args: Record<PropertyKey, never>
