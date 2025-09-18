@@ -34,6 +34,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (storedClientId) {
         setClientId(storedClientId);
         setUser({ client_id: storedClientId });
+        // Restore database context for RLS
+        supabase.rpc('set_config', {
+          setting_name: 'app.current_client_id',
+          new_value: storedClientId,
+          is_local: false
+        }).catch(console.error);
       }
     }
     if (storedAdminSession) setAdminSession(storedAdminSession);
@@ -66,6 +72,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('clients')
         .update({ last_login: new Date().toISOString() })
         .eq('id', client.id);
+
+      // Set the database context for RLS policies
+      await supabase.rpc('set_config', {
+        setting_name: 'app.current_client_id',
+        new_value: client.client_id,
+        is_local: false
+      });
 
       // Set session
       const sessionId = `client_${client.client_id}_${Date.now()}`;
