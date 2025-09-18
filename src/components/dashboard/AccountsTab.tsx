@@ -16,24 +16,30 @@ export function AccountsTab() {
   const [activeAccountsTab, setActiveAccountsTab] = useState('sales');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Accounts Management</h2>
-        <p className="text-muted-foreground">Complete financial and business records management</p>
+    <div className="space-y-6 bg-background min-h-screen">
+      <div className="bg-sidebar-background border border-sidebar-border rounded-lg p-6">
+        <h2 className="text-3xl font-bold text-sidebar-primary">Enterprise Accounting System</h2>
+        <p className="text-sidebar-foreground mt-2">Complete financial and business records management platform</p>
+        <div className="flex gap-4 mt-4">
+          <div className="text-sm">
+            <span className="text-sidebar-foreground/60">Module:</span>
+            <span className="text-sidebar-primary font-medium ml-1">Financial Management</span>
+          </div>
+          <div className="text-sm">
+            <span className="text-sidebar-foreground/60">Version:</span>
+            <span className="text-sidebar-primary font-medium ml-1">Enterprise 2024</span>
+          </div>
+        </div>
       </div>
 
       <Tabs value={activeAccountsTab} onValueChange={setActiveAccountsTab} className="w-full">
-        <TabsList className="grid grid-cols-5 lg:grid-cols-10 w-full mb-6">
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="purchases">Purchases</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="assets">Assets & Liabilities</TabsTrigger>
-          <TabsTrigger value="banking">Banking & Cashflow</TabsTrigger>
-          <TabsTrigger value="taxes">Taxes & Compliance</TabsTrigger>
-          <TabsTrigger value="financial">Financial Records</TabsTrigger>
-          <TabsTrigger value="legal">Legal & Compliance</TabsTrigger>
-          <TabsTrigger value="employee">Employee</TabsTrigger>
-          <TabsTrigger value="customer">Customer & Sales</TabsTrigger>
+        <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full mb-6 bg-sidebar-background border border-sidebar-border">
+          <TabsTrigger value="sales" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sales & Revenue</TabsTrigger>
+          <TabsTrigger value="purchases" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Purchases</TabsTrigger>
+          <TabsTrigger value="expenses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Expenses</TabsTrigger>
+          <TabsTrigger value="assets" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Assets & Liabilities</TabsTrigger>
+          <TabsTrigger value="banking" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Banking</TabsTrigger>
+          <TabsTrigger value="reports" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales">
@@ -56,24 +62,64 @@ export function AccountsTab() {
           <BankingSection />
         </TabsContent>
 
-        <TabsContent value="taxes">
-          <TaxesSection />
-        </TabsContent>
-
-        <TabsContent value="financial">
-          <FinancialRecordsSection />
-        </TabsContent>
-
-        <TabsContent value="legal">
-          <LegalComplianceSection />
-        </TabsContent>
-
-        <TabsContent value="employee">
-          <EmployeeSection />
-        </TabsContent>
-
-        <TabsContent value="customer">
-          <CustomerSalesSection />
+        <TabsContent value="reports">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="border-sidebar-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  Tax Compliance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TaxesSection />
+              </CardContent>
+            </Card>
+            <Card className="border-sidebar-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  Financial Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FinancialRecordsSection />
+              </CardContent>
+            </Card>
+            <Card className="border-sidebar-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  Legal & Compliance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LegalComplianceSection />
+              </CardContent>
+            </Card>
+            <Card className="border-sidebar-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  Employee Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmployeeSection />
+              </CardContent>
+            </Card>
+            <Card className="border-sidebar-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  Customer Relations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CustomerSalesSection />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

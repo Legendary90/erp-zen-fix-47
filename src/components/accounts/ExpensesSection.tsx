@@ -97,25 +97,34 @@ export function ExpensesSection() {
   const addExpense = async () => {
     if (!formData.description || !formData.amount || !user) return;
 
+    console.log('Adding expense with user:', user);
+    console.log('Form data:', formData);
+    
     const table = activeExpenseTab === 'daily' ? 'expense_entries' : 'monthly_expenses';
     const insertData = {
       ...formData,
       amount: parseFloat(formData.amount),
-      client_id: user.client_id,
+      client_id: user.client_id || user.id,
       ...(activeExpenseTab === 'monthly' && {
         month_number: currentMonth,
         year: currentYear
       })
     };
 
-    const { error } = await supabase
+    console.log('Insert data:', insertData);
+
+    const { data, error } = await supabase
       .from(table)
-      .insert([insertData]);
+      .insert([insertData])
+      .select();
+
+    console.log('Supabase response:', { data, error });
 
     if (error) {
+      console.error('Expense insert error:', error);
       toast({
         title: "Error",
-        description: "Failed to add expense entry",
+        description: `Failed to add expense entry: ${error.message}`,
         variant: "destructive",
       });
     } else {
@@ -146,25 +155,37 @@ export function ExpensesSection() {
   const totalMonthlyExpenses = monthlyExpenses.reduce((sum, entry) => sum + entry.amount, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-xl font-bold">Expenses Management</h3>
-          <p className="text-muted-foreground">Track salaries, utilities, rent, and operational expenses</p>
-        </div>
-        <div className="flex gap-2">
-          {activeExpenseTab === 'monthly' && (
-            <Button variant="outline" onClick={createNewMonth}>
-              New Month
-            </Button>
-          )}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Expense
+    <div className="space-y-6 bg-background">
+      <div className="bg-card border border-sidebar-border rounded-lg p-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-bold text-sidebar-primary flex items-center gap-2">
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+              Expense Management System
+            </h3>
+            <p className="text-sidebar-foreground mt-1">Track operational expenses, overhead costs, and financial outflows</p>
+            <div className="flex gap-4 mt-3 text-sm">
+              <span className="px-3 py-1 bg-sidebar-accent rounded-full text-sidebar-foreground">
+                Module: Expense Tracking
+              </span>
+              <span className="px-3 py-1 bg-sidebar-accent rounded-full text-sidebar-foreground">
+                Period: {new Date().getFullYear()}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            {activeExpenseTab === 'monthly' && (
+              <Button variant="outline" onClick={createNewMonth} className="border-sidebar-border">
+                New Month
               </Button>
-            </DialogTrigger>
+            )}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Expense Entry
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Add Expense Entry</DialogTitle>
@@ -214,27 +235,29 @@ export function ExpensesSection() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Daily Expenses</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-sidebar-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-sidebar-background/50">
+            <CardTitle className="text-sm font-semibold text-sidebar-primary">Daily Expenses Total</CardTitle>
+            <Receipt className="h-5 w-5 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalDailyExpenses.toFixed(2)}</div>
+          <CardContent className="pt-4">
+            <div className="text-3xl font-bold text-sidebar-primary">${totalDailyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <p className="text-sm text-sidebar-foreground/70 mt-1">Current daily expense entries</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-sidebar-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-sidebar-background/50">
+            <CardTitle className="text-sm font-semibold text-sidebar-primary">Monthly Expenses Total</CardTitle>
+            <Receipt className="h-5 w-5 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalMonthlyExpenses.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-4">
+            <div className="text-3xl font-bold text-sidebar-primary">${totalMonthlyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <p className="text-sm text-sidebar-foreground/70 mt-1">
               {new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </p>
           </CardContent>
@@ -242,9 +265,9 @@ export function ExpensesSection() {
       </div>
 
       <Tabs value={activeExpenseTab} onValueChange={setActiveExpenseTab}>
-        <TabsList>
-          <TabsTrigger value="daily">Daily Expenses</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Expenses</TabsTrigger>
+        <TabsList className="bg-sidebar-background border border-sidebar-border">
+          <TabsTrigger value="daily" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Daily Expense Entries</TabsTrigger>
+          <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Monthly Expense Tracking</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily">
