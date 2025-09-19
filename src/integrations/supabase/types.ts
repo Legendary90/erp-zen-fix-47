@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_periods: {
+        Row: {
+          client_id: string
+          created_at: string
+          end_date: string
+          id: string
+          period_name: string
+          period_type: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          period_name: string
+          period_type?: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          period_name?: string
+          period_type?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          account_type: string
+          client_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          parent_account_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          account_type: string
+          client_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          parent_account_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          account_type?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          parent_account_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           created_at: string | null
@@ -64,6 +144,75 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      bills: {
+        Row: {
+          bill_date: string
+          bill_number: string
+          client_id: string
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_amount: number
+          period_id: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          bill_date: string
+          bill_number: string
+          client_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          period_id: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          bill_date?: string
+          bill_number?: string
+          client_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          period_id?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       challans: {
         Row: {
@@ -196,6 +345,54 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string | null
+          client_id: string
+          contact_person: string | null
+          created_at: string
+          credit_limit: number | null
+          customer_code: string
+          customer_name: string
+          email: string | null
+          id: string
+          is_active: boolean
+          payment_terms: number | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          client_id: string
+          contact_person?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          customer_code: string
+          customer_name: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          payment_terms?: number | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          client_id?: string
+          contact_person?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          customer_code?: string
+          customer_name?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          payment_terms?: number | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           client_id: string
@@ -237,6 +434,7 @@ export type Database = {
           date: string
           description: string
           id: string
+          period_id: string | null
         }
         Insert: {
           amount: number
@@ -246,6 +444,7 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          period_id?: string | null
         }
         Update: {
           amount?: number
@@ -255,6 +454,7 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          period_id?: string | null
         }
         Relationships: [
           {
@@ -263,6 +463,73 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "expense_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_ledger: {
+        Row: {
+          account_id: string
+          client_id: string
+          created_at: string
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string
+          id: string
+          period_id: string
+          reference_id: string | null
+          reference_type: string | null
+          transaction_date: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          client_id: string
+          created_at?: string
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description: string
+          id?: string
+          period_id: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          client_id?: string
+          created_at?: string
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string
+          id?: string
+          period_id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_ledger_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -390,6 +657,75 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          client_id: string
+          created_at: string
+          customer_id: string
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          paid_amount: number
+          period_id: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          customer_id: string
+          due_date: string
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          notes?: string | null
+          paid_amount?: number
+          period_id: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          customer_id?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_amount?: number
+          period_id?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_expenses: {
         Row: {
           amount: number
@@ -485,6 +821,7 @@ export type Database = {
           description: string
           id: string
           month_number: number
+          period_id: string | null
           year: number
         }
         Insert: {
@@ -496,6 +833,7 @@ export type Database = {
           description: string
           id?: string
           month_number: number
+          period_id?: string | null
           year?: number
         }
         Update: {
@@ -507,6 +845,7 @@ export type Database = {
           description?: string
           id?: string
           month_number?: number
+          period_id?: string | null
           year?: number
         }
         Relationships: [
@@ -516,6 +855,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "purchase_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -529,6 +875,7 @@ export type Database = {
           description: string
           id: string
           payment_status: string | null
+          period_id: string | null
         }
         Insert: {
           amount: number
@@ -539,6 +886,7 @@ export type Database = {
           description: string
           id?: string
           payment_status?: string | null
+          period_id?: string | null
         }
         Update: {
           amount?: number
@@ -549,6 +897,7 @@ export type Database = {
           description?: string
           id?: string
           payment_status?: string | null
+          period_id?: string | null
         }
         Relationships: [
           {
@@ -558,7 +907,59 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["client_id"]
           },
+          {
+            foreignKeyName: "sales_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          client_id: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          payment_terms: number | null
+          phone: string | null
+          updated_at: string
+          vendor_code: string
+          vendor_name: string
+        }
+        Insert: {
+          address?: string | null
+          client_id: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          payment_terms?: number | null
+          phone?: string | null
+          updated_at?: string
+          vendor_code: string
+          vendor_name: string
+        }
+        Update: {
+          address?: string | null
+          client_id?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          payment_terms?: number | null
+          phone?: string | null
+          updated_at?: string
+          vendor_code?: string
+          vendor_name?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -585,6 +986,10 @@ export type Database = {
       check_expired_subscriptions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      create_default_period: {
+        Args: { p_client_id: string }
+        Returns: string
       }
       extend_client_subscription: {
         Args: { p_client_id: string; p_months?: number }

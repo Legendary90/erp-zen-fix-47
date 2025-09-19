@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { ProjectsTab } from '@/components/dashboard/ProjectsTab';
 import { HistoryTab } from '@/components/dashboard/HistoryTab';
-import { InventoryTab } from '@/components/dashboard/InventoryTab';
+import { ProjectsTab } from '@/components/dashboard/ProjectsTab';
 import { AccountsTab } from '@/components/dashboard/AccountsTab';
 import { DocumentsTab } from '@/components/dashboard/DocumentsTab';
 
@@ -37,7 +37,7 @@ export default function ClientDashboard() {
           <TabsList className="grid grid-cols-5 w-full mb-6">
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="accounts">Accounts</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
