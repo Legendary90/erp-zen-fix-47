@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { ProjectsTab } from '@/components/dashboard/ProjectsTab';
 import { HistoryTab } from '@/components/dashboard/HistoryTab';
-import { ProjectsTab } from '@/components/dashboard/ProjectsTab';
 import { AccountsTab } from '@/components/dashboard/AccountsTab';
 import { DocumentsTab } from '@/components/dashboard/DocumentsTab';
 
@@ -34,10 +33,9 @@ export default function ClientDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full mb-6">
+          <TabsList className="grid grid-cols-4 w-full mb-6">
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="accounts">Accounts</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
@@ -48,10 +46,6 @@ export default function ClientDashboard() {
 
           <TabsContent value="history">
             <HistoryTab />
-          </TabsContent>
-
-          <TabsContent value="inventory">
-            <InventoryTab />
           </TabsContent>
 
           <TabsContent value="accounts">
