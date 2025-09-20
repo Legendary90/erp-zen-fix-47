@@ -4,14 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import { ProjectsTab } from '@/components/dashboard/ProjectsTab';
 import { HistoryTab } from '@/components/dashboard/HistoryTab';
 import { AccountsTab } from '@/components/dashboard/AccountsTab';
 import { DocumentsTab } from '@/components/dashboard/DocumentsTab';
 
 export default function ClientDashboard() {
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('projects');
+  const [activeTab, setActiveTab] = useState('accounts');
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,23 +32,18 @@ export default function ClientDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full mb-6">
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="accounts">Accounts</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-full mb-6 bg-card border">
+            <TabsTrigger value="accounts" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Financial Management</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Transaction History</TabsTrigger>
+            <TabsTrigger value="documents" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Document Center</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="projects">
-            <ProjectsTab />
+          <TabsContent value="accounts">
+            <AccountsTab />
           </TabsContent>
 
           <TabsContent value="history">
             <HistoryTab />
-          </TabsContent>
-
-          <TabsContent value="accounts">
-            <AccountsTab />
           </TabsContent>
 
           <TabsContent value="documents">

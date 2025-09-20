@@ -3,13 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Receipt } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Trash2, Calendar, Receipt, TrendingDown } from 'lucide-react';
 
 interface ExpenseEntry {
   id: string;
@@ -17,7 +19,7 @@ interface ExpenseEntry {
   amount: number;
   date: string;
   category: string;
-  client_id: string;
+  period_id?: string;
 }
 
 interface MonthlyExpense {
@@ -28,277 +30,427 @@ interface MonthlyExpense {
   category: string;
   month_number: number;
   year: number;
-  client_id: string;
+}
+
+interface AccountingPeriod {
+  id: string;
+  period_name: string;
+  start_date: string;
+  end_date: string;
+  status: string;
 }
 
 export function ExpensesSection() {
+  const { clientId } = useAuth();
+  const { toast } = useToast();
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<MonthlyExpense[]>([]);
+  const [accountingPeriods, setAccountingPeriods] = useState<AccountingPeriod[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeExpenseTab, setActiveExpenseTab] = useState('daily');
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [formData, setFormData] = useState({
+  const [newEntry, setNewEntry] = useState({
     description: '',
     amount: '',
-    category: '',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    category: ''
   });
-  const { user } = useAuth();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchExpenseEntries();
-    fetchMonthlyExpenses();
-  }, [user, currentMonth, currentYear]);
+  const fetchAccountingPeriods = async () => {
+    if (!clientId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('accounting_periods')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('start_date', { ascending: false });
+
+      if (error) throw error;
+      setAccountingPeriods(data || []);
+      
+      const activePeriod = data?.find(p => p.status === 'active');
+      if (activePeriod) {
+        setSelectedPeriod(activePeriod.id);
+      }
+    } catch (error) {
+      console.error('Error fetching periods:', error);
+    }
+  };
 
   const fetchExpenseEntries = async () => {
-    if (!user) return;
+    if (!clientId || !selectedPeriod) return;
 
-    const { data, error } = await supabase
-      .from('expense_entries')
-      .select('*')
-      .eq('client_id', user.client_id)
-      .order('date', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('expense_entries')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('period_id', selectedPeriod)
+        .order('date', { ascending: false });
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch expense entries",
-        variant: "destructive",
-      });
-    } else {
+      if (error) throw error;
       setExpenseEntries(data || []);
+    } catch (error) {
+      console.error('Error fetching expense entries:', error);
     }
   };
 
   const fetchMonthlyExpenses = async () => {
-    if (!user) return;
+    if (!clientId) return;
 
-    const { data, error } = await supabase
-      .from('monthly_expenses')
-      .select('*')
-      .eq('client_id', user.client_id)
-      .eq('month_number', currentMonth)
-      .eq('year', currentYear)
-      .order('date', { ascending: false });
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
 
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .from('monthly_expenses')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('month_number', currentMonth)
+        .eq('year', currentYear)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setMonthlyExpenses(data || []);
+    } catch (error) {
+      console.error('Error fetching monthly expenses:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAccountingPeriods();
+    fetchMonthlyExpenses();
+  }, [clientId]);
+
+  useEffect(() => {
+    if (selectedPeriod) {
+      fetchExpenseEntries();
+    }
+  }, [selectedPeriod]);
+
+  const createNewPeriod = async () => {
+    if (!clientId) return;
+
+    const currentDate = new Date();
+    const periodName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    try {
+      await supabase
+        .from('accounting_periods')
+        .update({ status: 'closed' })
+        .eq('client_id', clientId)
+        .eq('status', 'active');
+
+      const { data, error } = await supabase
+        .from('accounting_periods')
+        .insert({
+          client_id: clientId,
+          period_name: periodName,
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `New accounting period "${periodName}" created`
+      });
+
+      fetchAccountingPeriods();
+      setSelectedPeriod(data.id);
+    } catch (error) {
+      console.error('Error creating period:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch monthly expenses",
-        variant: "destructive",
+        description: "Failed to create new period",
+        variant: "destructive"
       });
-    } else {
-      setMonthlyExpenses(data || []);
     }
   };
 
   const addExpense = async () => {
-    if (!formData.description || !formData.amount || !user) return;
-
-    console.log('Adding expense with user:', user);
-    console.log('Form data:', formData);
-    
-    const table = activeExpenseTab === 'daily' ? 'expense_entries' : 'monthly_expenses';
-    const insertData = {
-      ...formData,
-      amount: parseFloat(formData.amount),
-      client_id: user.client_id || user.id,
-      ...(activeExpenseTab === 'monthly' && {
-        month_number: currentMonth,
-        year: currentYear
-      })
-    };
-
-    console.log('Insert data:', insertData);
-
-    const { data, error } = await supabase
-      .from(table)
-      .insert([insertData])
-      .select();
-
-    console.log('Supabase response:', { data, error });
-
-    if (error) {
-      console.error('Expense insert error:', error);
+    if (!clientId || !newEntry.description || !newEntry.amount) {
       toast({
         title: "Error",
-        description: `Failed to add expense entry: ${error.message}`,
-        variant: "destructive",
+        description: "Please fill in all required fields",
+        variant: "destructive"
       });
-    } else {
+      return;
+    }
+
+    const entryDate = new Date(newEntry.date);
+    const table = activeExpenseTab === 'daily' ? 'expense_entries' : 'monthly_expenses';
+    
+    const insertData: any = {
+      client_id: clientId,
+      description: newEntry.description,
+      amount: parseFloat(newEntry.amount),
+      date: newEntry.date,
+      category: newEntry.category || null
+    };
+
+    if (activeExpenseTab === 'daily' && selectedPeriod) {
+      insertData.period_id = selectedPeriod;
+    }
+
+    if (activeExpenseTab === 'monthly') {
+      insertData.month_number = entryDate.getMonth() + 1;
+      insertData.year = entryDate.getFullYear();
+    }
+
+    try {
+      const { error } = await supabase
+        .from(table)
+        .insert(insertData);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
-        description: "Expense entry added successfully",
+        description: "Expense entry added successfully"
       });
-      setFormData({
+
+      setNewEntry({
         description: '',
         amount: '',
-        category: '',
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        category: ''
       });
       setIsDialogOpen(false);
-      fetchExpenseEntries();
-      fetchMonthlyExpenses();
+
+      if (activeExpenseTab === 'daily') {
+        fetchExpenseEntries();
+      } else {
+        fetchMonthlyExpenses();
+      }
+    } catch (error) {
+      console.error('Error adding expense entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add expense entry",
+        variant: "destructive"
+      });
     }
   };
 
-  const createNewMonth = () => {
-    const now = new Date();
-    setCurrentMonth(now.getMonth() + 1);
-    setCurrentYear(now.getFullYear());
-    fetchMonthlyExpenses();
+  const deleteExpense = async (id: string, isMonthly: boolean = false) => {
+    if (!confirm('Are you sure you want to delete this expense entry?')) return;
+
+    const table = isMonthly ? 'monthly_expenses' : 'expense_entries';
+
+    try {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Expense entry deleted successfully"
+      });
+
+      if (isMonthly) {
+        fetchMonthlyExpenses();
+      } else {
+        fetchExpenseEntries();
+      }
+    } catch (error) {
+      console.error('Error deleting expense entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete expense entry",
+        variant: "destructive"
+      });
+    }
   };
 
   const totalDailyExpenses = expenseEntries.reduce((sum, entry) => sum + entry.amount, 0);
   const totalMonthlyExpenses = monthlyExpenses.reduce((sum, entry) => sum + entry.amount, 0);
 
   return (
-    <div className="space-y-6 bg-background">
-      <div className="bg-card border border-sidebar-border rounded-lg p-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-2xl font-bold text-sidebar-primary flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary rounded-full"></div>
-              Expense Management System
-            </h3>
-            <p className="text-sidebar-foreground mt-1">Track operational expenses, overhead costs, and financial outflows</p>
-            <div className="flex gap-4 mt-3 text-sm">
-              <span className="px-3 py-1 bg-sidebar-accent rounded-full text-sidebar-foreground">
-                Module: Expense Tracking
-              </span>
-              <span className="px-3 py-1 bg-sidebar-accent rounded-full text-sidebar-foreground">
-                Period: {new Date().getFullYear()}
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            {activeExpenseTab === 'monthly' && (
-              <Button variant="outline" onClick={createNewMonth} className="border-sidebar-border">
-                New Month
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-bold flex items-center gap-2">
+            <TrendingDown className="h-6 w-6 text-red-600" />
+            Expense Control Center
+          </h3>
+          <p className="text-muted-foreground">Comprehensive operational and overhead expense tracking</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={createNewPeriod} variant="outline" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            New Period
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Expense
               </Button>
-            )}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Expense Entry
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="max-w-md">
+            </DialogTrigger>
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Expense Entry</DialogTitle>
                 <DialogDescription>Record a new expense transaction</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea
                     id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Salary, electricity, rent, etc."
+                    value={newEntry.description}
+                    onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                    placeholder="Enter expense description"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount</Label>
+                <div>
+                  <Label htmlFor="amount">Amount *</Label>
                   <Input
                     id="amount"
                     type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    step="0.01"
+                    value={newEntry.amount}
+                    onChange={(e) => setNewEntry({...newEntry, amount: e.target.value})}
                     placeholder="0.00"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    placeholder="Operations, utilities, etc."
-                  />
-                </div>
-                <div className="grid gap-2">
+                <div>
                   <Label htmlFor="date">Date</Label>
                   <Input
                     id="date"
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    value={newEntry.date}
+                    onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    value={newEntry.category}
+                    onChange={(e) => setNewEntry({...newEntry, category: e.target.value})}
+                    placeholder="e.g., Utilities, Rent, Salaries"
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={addExpense}>Add Expense</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={addExpense}>Add Entry</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-sidebar-border shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-sidebar-background/50">
-            <CardTitle className="text-sm font-semibold text-sidebar-primary">Daily Expenses Total</CardTitle>
-            <Receipt className="h-5 w-5 text-primary" />
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Current Period</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-3xl font-bold text-sidebar-primary">${totalDailyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            <p className="text-sm text-sidebar-foreground/70 mt-1">Current daily expense entries</p>
+          <CardContent>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select accounting period" />
+              </SelectTrigger>
+              <SelectContent>
+                {accountingPeriods.map((period) => (
+                  <SelectItem key={period.id} value={period.id}>
+                    {period.period_name} ({period.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
-        <Card className="border-sidebar-border shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-sidebar-background/50">
-            <CardTitle className="text-sm font-semibold text-sidebar-primary">Monthly Expenses Total</CardTitle>
-            <Receipt className="h-5 w-5 text-primary" />
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Daily Expenses</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-3xl font-bold text-sidebar-primary">${totalMonthlyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            <p className="text-sm text-sidebar-foreground/70 mt-1">
-              {new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </p>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600 flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              ${totalDailyExpenses.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600 flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              ${totalMonthlyExpenses.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <Tabs value={activeExpenseTab} onValueChange={setActiveExpenseTab}>
-        <TabsList className="bg-sidebar-background border border-sidebar-border">
-          <TabsTrigger value="daily" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Daily Expense Entries</TabsTrigger>
-          <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Monthly Expense Tracking</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-card border">
+          <TabsTrigger value="daily" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">
+            Daily Expenses
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">
+            Monthly Expenses
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily">
           <Card>
             <CardHeader>
               <CardTitle>Daily Expense Entries</CardTitle>
+              <CardDescription>Operational expenses for the selected accounting period</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expenseEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{entry.description}</TableCell>
-                      <TableCell>{entry.category || '-'}</TableCell>
-                      <TableCell>${entry.amount.toFixed(2)}</TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {expenseEntries.map((entry) => (
+                      <TableRow key={entry.id} className="hover:bg-muted/50">
+                        <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">{entry.description}</TableCell>
+                        <TableCell>{entry.category || '-'}</TableCell>
+                        <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteExpense(entry.id, false)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               {expenseEntries.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No daily expenses recorded yet.
+                  No daily expense entries found for the selected period
                 </div>
               )}
             </CardContent>
@@ -309,34 +461,44 @@ export function ExpensesSection() {
           <Card>
             <CardHeader>
               <CardTitle>Monthly Expense Entries</CardTitle>
-              <CardDescription>
-                {new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </CardDescription>
+              <CardDescription>Recurring monthly expenses and overhead costs</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyExpenses.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{entry.description}</TableCell>
-                      <TableCell>{entry.category || '-'}</TableCell>
-                      <TableCell>${entry.amount.toFixed(2)}</TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {monthlyExpenses.map((entry) => (
+                      <TableRow key={entry.id} className="hover:bg-muted/50">
+                        <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">{entry.description}</TableCell>
+                        <TableCell>{entry.category || '-'}</TableCell>
+                        <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteExpense(entry.id, true)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               {monthlyExpenses.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No monthly expenses for this period.
+                  No monthly expense entries found
                 </div>
               )}
             </CardContent>
