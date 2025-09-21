@@ -15,21 +15,29 @@ win:
   target: nsis
   icon: public/icons/app-icon.ico
   requestedExecutionLevel: asInvoker
+  artifactName: InviX.exe
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: InviX ERP
+  installerIcon: public/icons/app-icon.ico
+  uninstallerIcon: public/icons/app-icon.ico
+  installerHeaderIcon: public/icons/app-icon.ico
+  artifactName: InviX_setup.exe
 mac:
   target: dmg
   icon: public/icons/app-icon.icns
   category: public.app-category.business
+  artifactName: InviX.dmg
 linux:
   target: AppImage
   icon: public/icons/app-icon.png
   category: Office
+  artifactName: InviX.AppImage
 publish:
   provider: github
   owner: your-github-username
   repo: invix-erp
+  releaseType: release

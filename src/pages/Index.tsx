@@ -36,7 +36,10 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <Link to="/admin">
-                  <Button variant="outline" className="w-full">Admin Access</Button>
+                  <Button variant="outline" className="w-full mb-2">Admin Login</Button>
+                </Link>
+                <Link to="/admin-access">
+                  <Button variant="secondary" className="w-full">Admin Access Info</Button>
                 </Link>
               </CardContent>
             </Card>
