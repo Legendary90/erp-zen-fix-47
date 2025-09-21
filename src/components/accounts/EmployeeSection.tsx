@@ -8,10 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Calendar, Trash2, Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Users, Calendar, Trash2, Edit, Check, X, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { AttendanceTracker } from './AttendanceTracker';
+import { format } from 'date-fns';
 
 interface Employee {
   id: string;
@@ -229,16 +232,43 @@ export function EmployeeSection() {
     }
   };
 
+  // Calculate today's attendance from localStorage
+  const getTodayAttendance = () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const month = format(new Date(), 'MM');
+    const year = format(new Date(), 'yyyy');
+    const stored = localStorage.getItem(`attendance_${clientId}`);
+    
+    if (!stored) return { present: 0, onLeave: 0 };
+    
+    const attendance = JSON.parse(stored);
+    let present = 0;
+    let onLeave = 0;
+    
+    employees.forEach(emp => {
+      const empAttendance = attendance.find((a: any) => 
+        a.employeeId === emp.id && a.month === month && a.year === year
+      );
+      
+      if (empAttendance) {
+        const todayRecord = empAttendance.records.find((r: any) => r.date === today);
+        if (todayRecord?.status === 'present') present++;
+        if (todayRecord?.status === 'on_leave') onLeave++;
+      }
+    });
+    
+    return { present, onLeave };
+  };
+
+  const { present: presentToday, onLeave } = getTodayAttendance();
   const totalEmployees = employees.length;
-  const presentToday = employees.filter(emp => emp.status === 'active').length;
-  const onLeave = employees.filter(emp => emp.status === 'on_leave').length;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-2xl font-bold">Employee Management</h3>
-          <p className="text-muted-foreground">Track attendance, leave records, and employee data</p>
+          <p className="text-muted-foreground">Track attendance, leave records, and employee data with daily attendance tracking</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -412,75 +442,88 @@ export function EmployeeSection() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Employee Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Attendance</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell className="font-mono">{employee.employee_code}</TableCell>
-                  <TableCell>
-                    <div className="font-medium">{employee.name}</div>
-                    {employee.email && (
-                      <div className="text-sm text-muted-foreground">{employee.email}</div>
-                    )}
-                  </TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.department || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={employee.status === 'active' ? 'default' : employee.status === 'on_leave' ? 'secondary' : 'outline'}>
-                      {employee.status === 'active' ? 'Active' : employee.status === 'on_leave' ? 'On Leave' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>Present: {employee.attendance_days} days</div>
-                      <div>Leave: {employee.leave_days} days</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(employee)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteEmployee(employee.id, employee.name)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {employees.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No employees found. Add your first employee to get started.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="records" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="records">Employee Records</TabsTrigger>
+          <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="records" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Employee Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Attendance</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-mono">{employee.employee_code}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{employee.name}</div>
+                        {employee.email && (
+                          <div className="text-sm text-muted-foreground">{employee.email}</div>
+                        )}
+                      </TableCell>
+                      <TableCell>{employee.position}</TableCell>
+                      <TableCell>{employee.department || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={employee.status === 'active' ? 'default' : employee.status === 'on_leave' ? 'secondary' : 'outline'}>
+                          {employee.status === 'active' ? 'Active' : employee.status === 'on_leave' ? 'On Leave' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Present: {employee.attendance_days} days</div>
+                          <div>Leave: {employee.leave_days} days</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(employee)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteEmployee(employee.id, employee.name)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {employees.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No employees found. Add your first employee to get started.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="attendance">
+          <AttendanceTracker employees={employees} clientId={clientId || ''} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
