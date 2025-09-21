@@ -37,7 +37,7 @@ export function ChartOfAccountsSection() {
   const [accountCode, setAccountCode] = useState('');
   const [accountName, setAccountName] = useState('');
   const [accountType, setAccountType] = useState('');
-  const [parentAccountId, setParentAccountId] = useState('');
+  const [parentAccountId, setParentAccountId] = useState('none');
   const { clientId } = useAuth();
   const { toast } = useToast();
 
@@ -82,7 +82,7 @@ export function ChartOfAccountsSection() {
         account_code: accountCode,
         account_name: accountName,
         account_type: accountType,
-        parent_account_id: parentAccountId || null,
+        parent_account_id: parentAccountId && parentAccountId !== 'none' ? parentAccountId : null,
         is_active: true
       }]);
 
@@ -100,7 +100,7 @@ export function ChartOfAccountsSection() {
       setAccountCode('');
       setAccountName('');
       setAccountType('');
-      setParentAccountId('');
+      setParentAccountId('none');
       setIsDialogOpen(false);
       fetchAccounts();
     }
@@ -194,7 +194,7 @@ export function ChartOfAccountsSection() {
                     <SelectValue placeholder="Select parent account" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {accounts
                       .filter(acc => acc.account_type === accountType)
                       .map((account) => (
