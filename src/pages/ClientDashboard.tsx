@@ -51,6 +51,8 @@ export default function ClientDashboard() {
   const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('sales');
 
+  const navigateToAccountingPeriods = () => setActiveSection('periods');
+
   const sidebarItems = [
     { id: 'sales', label: 'Sales Management', icon: DollarSign, component: SalesSection },
     { id: 'purchases', label: 'Purchase Orders', icon: ShoppingCart, component: PurchasesSection },
@@ -154,7 +156,7 @@ export default function ClientDashboard() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
-            <ActiveComponent />
+            <ActiveComponent navigateToAccountingPeriods={navigateToAccountingPeriods} />
           </div>
         </div>
       </div>

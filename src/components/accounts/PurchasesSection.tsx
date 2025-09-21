@@ -31,7 +31,11 @@ interface AccountingPeriod {
   status: string;
 }
 
-export function PurchasesSection() {
+interface PurchasesSectionProps {
+  navigateToAccountingPeriods?: () => void;
+}
+
+export function PurchasesSection({ navigateToAccountingPeriods }: PurchasesSectionProps = {}) {
   const { clientId } = useAuth();
   const { toast } = useToast();
   const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
@@ -237,7 +241,7 @@ export function PurchasesSection() {
           <p className="text-muted-foreground">Track supplier purchases and inventory acquisitions</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={createNewPeriod} variant="outline" className="flex items-center gap-2">
+          <Button onClick={navigateToAccountingPeriods} variant="outline" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             New Period
           </Button>

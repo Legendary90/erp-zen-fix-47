@@ -30,7 +30,11 @@ interface AccountingPeriod {
   status: string;
 }
 
-export function SalesSection() {
+interface SalesSectionProps {
+  navigateToAccountingPeriods?: () => void;
+}
+
+export function SalesSection({ navigateToAccountingPeriods }: SalesSectionProps = {}) {
   const { clientId } = useAuth();
   const { toast } = useToast();
   const [salesEntries, setSalesEntries] = useState<SalesEntry[]>([]);
@@ -238,7 +242,7 @@ export function SalesSection() {
           <p className="text-muted-foreground">Track and manage sales transactions</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={createNewPeriod} variant="outline" className="flex items-center gap-2">
+          <Button onClick={navigateToAccountingPeriods} variant="outline" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             New Period
           </Button>

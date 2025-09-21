@@ -40,7 +40,11 @@ interface AccountingPeriod {
   status: string;
 }
 
-export function ExpensesSection() {
+interface ExpensesSectionProps {
+  navigateToAccountingPeriods?: () => void;
+}
+
+export function ExpensesSection({ navigateToAccountingPeriods }: ExpensesSectionProps = {}) {
   const { clientId } = useAuth();
   const { toast } = useToast();
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
@@ -288,7 +292,7 @@ export function ExpensesSection() {
           <p className="text-muted-foreground">Comprehensive operational and overhead expense tracking</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={createNewPeriod} variant="outline" className="flex items-center gap-2">
+          <Button onClick={navigateToAccountingPeriods} variant="outline" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             New Period
           </Button>
