@@ -345,6 +345,63 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_relations: {
+        Row: {
+          address: string | null
+          client_id: string
+          company_type: string | null
+          contact_person: string | null
+          created_at: string
+          customer_name: string
+          email: string | null
+          id: string
+          industry: string | null
+          last_contact_date: string | null
+          notes: string | null
+          phone: string | null
+          rating: number | null
+          relationship_type: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          client_id: string
+          company_type?: string | null
+          contact_person?: string | null
+          created_at?: string
+          customer_name: string
+          email?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          relationship_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          client_id?: string
+          company_type?: string | null
+          contact_person?: string | null
+          created_at?: string
+          customer_name?: string
+          email?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          relationship_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -424,6 +481,60 @@ export type Database = {
             referencedColumns: ["client_id"]
           },
         ]
+      }
+      employees: {
+        Row: {
+          attendance_days: number | null
+          client_id: string
+          created_at: string
+          department: string | null
+          email: string | null
+          employee_code: string
+          hire_date: string | null
+          id: string
+          leave_days: number | null
+          name: string
+          phone: string | null
+          position: string
+          salary: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attendance_days?: number | null
+          client_id: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          employee_code: string
+          hire_date?: string | null
+          id?: string
+          leave_days?: number | null
+          name: string
+          phone?: string | null
+          position: string
+          salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attendance_days?: number | null
+          client_id?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          employee_code?: string
+          hire_date?: string | null
+          id?: string
+          leave_days?: number | null
+          name?: string
+          phone?: string | null
+          position?: string
+          salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       expense_entries: {
         Row: {
@@ -725,6 +836,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_documents: {
+        Row: {
+          authority: string | null
+          client_id: string
+          created_at: string
+          description: string | null
+          document_number: string | null
+          document_type: string
+          expiry_date: string | null
+          file_path: string | null
+          id: string
+          issue_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          authority?: string | null
+          client_id: string
+          created_at?: string
+          description?: string | null
+          document_number?: string | null
+          document_type: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          issue_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          authority?: string | null
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          document_number?: string | null
+          document_type?: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          issue_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       monthly_expenses: {
         Row: {
