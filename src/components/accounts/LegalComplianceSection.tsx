@@ -63,9 +63,18 @@ export function LegalComplianceSection() {
                   <p className="text-sm text-muted-foreground">{doc.type}</p>
                   <p className="text-sm text-muted-foreground">Expires: {doc.expiry}</p>
                 </div>
-                <Badge variant={doc.status === 'active' ? 'default' : 'secondary'}>
-                  {doc.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={doc.status === 'active' ? 'default' : 'secondary'}>
+                    {doc.status}
+                  </Badge>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDocuments(documents.filter(d => d.id !== doc.id))}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

@@ -189,6 +189,7 @@ export function FinancialRecordsSection() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -205,6 +206,15 @@ export function FinancialRecordsSection() {
                   <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Badge variant="default">{record.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setRecords(records.filter(r => r.id !== record.id))}
+                    >
+                      Remove
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

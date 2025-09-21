@@ -183,6 +183,7 @@ export function TaxesSection() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,6 +197,15 @@ export function TaxesSection() {
                     <Badge variant={record.status === 'paid' ? 'default' : 'secondary'}>
                       {record.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setTaxRecords(taxRecords.filter(r => r.id !== record.id))}
+                    >
+                      Remove
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

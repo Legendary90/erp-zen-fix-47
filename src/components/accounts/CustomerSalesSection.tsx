@@ -70,6 +70,13 @@ export function CustomerSalesSection() {
                     <span className="text-sm">{customer.rating}</span>
                   </div>
                   <Badge variant="default">Active</Badge>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setCustomers(customers.filter(c => c.id !== customer.id))}
+                  >
+                    Remove
+                  </Button>
                 </div>
               </div>
             ))}

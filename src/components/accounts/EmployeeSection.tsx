@@ -62,7 +62,16 @@ export function EmployeeSection() {
                   <p className="text-sm text-muted-foreground">{emp.position}</p>
                   <p className="text-sm text-muted-foreground">Attendance: {emp.attendance} days | Leave: {emp.leave} days</p>
                 </div>
-                <Badge variant="default">Active</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="default">Active</Badge>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setEmployees(employees.filter(e => e.id !== emp.id))}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
