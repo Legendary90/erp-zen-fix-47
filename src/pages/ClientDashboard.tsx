@@ -11,7 +11,6 @@ import { FinancialRecordsSection } from '@/components/accounts/FinancialRecordsS
 import { LegalComplianceSection } from '@/components/accounts/LegalComplianceSection';
 import { EmployeeSection } from '@/components/accounts/EmployeeSection';
 import { CustomerSalesSection } from '@/components/accounts/CustomerSalesSection';
-import { HistoryTab } from '@/components/dashboard/HistoryTab';
 import { DocumentsTab } from '@/components/dashboard/DocumentsTab';
 import { AccountingPeriodsSection } from '@/components/accounts/AccountingPeriodsSection';
 import { ChartOfAccountsSection } from '@/components/accounts/ChartOfAccountsSection';
@@ -74,7 +73,6 @@ export default function ClientDashboard() {
     { id: 'crm', label: 'Customer Relations', icon: UserCheck, component: CustomerSalesSection },
     { id: 'taxmgt', label: 'Tax Compliance', icon: Settings, component: TaxManagementSection },
     { id: 'audit', label: 'Audit Trail', icon: Clock, component: AuditTrailSection },
-    { id: 'history', label: 'Transaction History', icon: Clock, component: HistoryTab },
     { id: 'documents', label: 'Document Center', icon: FolderOpen, component: DocumentsTab },
   ];
 
