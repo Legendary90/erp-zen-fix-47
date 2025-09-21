@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Building, CreditCard, TrendingUp, DollarSign, Minus } from 'lucide-react';
+import { Plus, Building, CreditCard, TrendingUp, DollarSign, Minus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -129,6 +129,31 @@ export function ChartOfAccountsSection() {
 
   const getTypeInfo = (type: string) => {
     return ACCOUNT_TYPES.find(t => t.value === type) || ACCOUNT_TYPES[0];
+  };
+
+  const deleteAccount = async (accountId: string, accountName: string) => {
+    if (!confirm(`Are you sure you want to delete the account "${accountName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('accounts')
+      .delete()
+      .eq('id', accountId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete account",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Account deleted successfully",
+      });
+      fetchAccounts();
+    }
   };
 
   const getAccountsByType = (type: string) => {
@@ -272,15 +297,24 @@ export function ChartOfAccountsSection() {
                             {account.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleAccountStatus(account.id, account.is_active)}
-                          >
-                            {account.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                        </TableCell>
+                         <TableCell>
+                           <div className="flex gap-2">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => toggleAccountStatus(account.id, account.is_active)}
+                             >
+                               {account.is_active ? 'Deactivate' : 'Activate'}
+                             </Button>
+                             <Button
+                               variant="destructive"
+                               size="sm"
+                               onClick={() => deleteAccount(account.id, account.account_name)}
+                             >
+                               <Trash2 className="h-4 w-4" />
+                             </Button>
+                           </div>
+                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
