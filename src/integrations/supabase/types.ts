@@ -127,23 +127,38 @@ export type Database = {
       admins: {
         Row: {
           created_at: string | null
+          email: string | null
+          full_name: string | null
           id: string
+          is_active: boolean | null
+          is_super_admin: boolean | null
           last_login: string | null
           password_hash: string
+          updated_at: string | null
           username: string
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          is_active?: boolean | null
+          is_super_admin?: boolean | null
           last_login?: string | null
           password_hash: string
+          updated_at?: string | null
           username: string
         }
         Update: {
           created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          is_active?: boolean | null
+          is_super_admin?: boolean | null
           last_login?: string | null
           password_hash?: string
+          updated_at?: string | null
           username?: string
         }
         Relationships: []

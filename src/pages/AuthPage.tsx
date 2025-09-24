@@ -1,171 +1,260 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
-export default function AuthPage() {
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [registerData, setRegisterData] = useState({ 
-    companyName: '', 
-    password: '', 
+const AuthPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { loginAsClient, loginAsAdmin, registerClient } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('client-login');
+
+  // Client Login Form State
+  const [clientLoginForm, setClientLoginForm] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Admin Login Form State
+  const [adminLoginForm, setAdminLoginForm] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Registration Form State
+  const [registerForm, setRegisterForm] = useState({
+    companyName: '',
+    password: '',
     confirmPassword: '',
     email: '',
     phone: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const { loginAsClient, registerClient } = useAuth();
-  const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleClientLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginData.username || !loginData.password) return;
-
     setIsLoading(true);
-    const success = await loginAsClient(loginData.username, loginData.password);
+
+    const success = await loginAsClient(clientLoginForm.username, clientLoginForm.password);
     if (success) {
       navigate('/dashboard');
     }
+    
+    setIsLoading(false);
+  };
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const success = await loginAsAdmin(adminLoginForm.username, adminLoginForm.password);
+    if (success) {
+      navigate('/admin');
+    }
+    
     setIsLoading(false);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!registerData.companyName || !registerData.password) return;
-    
-    if (registerData.password !== registerData.confirmPassword) {
+    if (registerForm.password !== registerForm.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
 
     setIsLoading(true);
     const success = await registerClient(
-      registerData.companyName, 
-      registerData.password,
-      registerData.email || undefined,
-      registerData.phone || undefined
+      registerForm.companyName,
+      registerForm.password,
+      registerForm.email || undefined,
+      registerForm.phone || undefined
     );
     
     if (success) {
-      setRegisterData({ companyName: '', password: '', confirmPassword: '', email: '', phone: '' });
+      setRegisterForm({ companyName: '', password: '', confirmPassword: '', email: '', phone: '' });
     }
     setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">ERP System</CardTitle>
-          <CardDescription>Access your business management platform</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Company Name</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your company name"
-                    value={loginData.username}
-                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Logging in...' : 'Login'}
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    type="text"
-                    placeholder="Enter your company name"
-                    value={registerData.companyName}
-                    onChange={(e) => setRegisterData({ ...registerData, companyName: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email (Optional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={registerData.email}
-                    onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (Optional)</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={registerData.phone}
-                    onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="regPassword">Password</Label>
-                  <Input
-                    id="regPassword"
-                    type="password"
-                    placeholder="Create a password"
-                    value={registerData.password}
-                    onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your password"
-                    value={registerData.confirmPassword}
-                    onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Registering...' : 'Register'}
-                </Button>
-                <p className="text-sm text-muted-foreground text-center">
-                  After registration, wait for admin approval to access the system.
-                </p>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">InviX ERP System</h1>
+          <p className="text-muted-foreground">Sign in to your account or create a new one</p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="client-login">Client Login</TabsTrigger>
+            <TabsTrigger value="admin-login">
+              <div className="flex items-center gap-1">
+                Admin
+                <Badge variant="secondary" className="text-xs">ADMIN</Badge>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="client-login">
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Login</CardTitle>
+                <CardDescription>Enter your company credentials to access your ERP dashboard</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleClientLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="client-username">Company Name / Username</Label>
+                    <Input
+                      id="client-username"
+                      type="text"
+                      placeholder="Enter your company name"
+                      value={clientLoginForm.username}
+                      onChange={(e) => setClientLoginForm({ ...clientLoginForm, username: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-password">Password</Label>
+                    <Input
+                      id="client-password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={clientLoginForm.password}
+                      onChange={(e) => setClientLoginForm({ ...clientLoginForm, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing In...' : 'Sign In as Client'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="admin-login">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Admin Login
+                  <Badge variant="destructive">RESTRICTED</Badge>
+                </CardTitle>
+                <CardDescription>Administrator access only. Default: admin / admin123</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAdminLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-username">Admin Username</Label>
+                    <Input
+                      id="admin-username"
+                      type="text"
+                      placeholder="Enter admin username"
+                      value={adminLoginForm.username}
+                      onChange={(e) => setAdminLoginForm({ ...adminLoginForm, username: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-password">Admin Password</Label>
+                    <Input
+                      id="admin-password"
+                      type="password"
+                      placeholder="Enter admin password"
+                      value={adminLoginForm.password}
+                      onChange={(e) => setAdminLoginForm({ ...adminLoginForm, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading} variant="destructive">
+                    {isLoading ? 'Signing In...' : 'Sign In as Admin'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="register">
+            <Card>
+              <CardHeader>
+                <CardTitle>Register New Client</CardTitle>
+                <CardDescription>Create a new company account for ERP access</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      type="text"
+                      placeholder="Enter your company name"
+                      value={registerForm.companyName}
+                      onChange={(e) => setRegisterForm({ ...registerForm, companyName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email (Optional)</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={registerForm.email}
+                      onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone (Optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={registerForm.phone}
+                      onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="regPassword">Password</Label>
+                    <Input
+                      id="regPassword"
+                      type="password"
+                      placeholder="Create a password"
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={registerForm.confirmPassword}
+                      onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Registering...' : 'Register Company'}
+                  </Button>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Registration is auto-approved. You can start using the system immediately.
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
-}
+};
+
+export default AuthPage;
