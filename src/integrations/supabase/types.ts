@@ -148,6 +148,45 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_periods: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          end_date: string
+          id: string
+          month_number: number
+          period_name: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          end_date: string
+          id?: string
+          month_number: number
+          period_name: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          month_number?: number
+          period_name?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       bills: {
         Row: {
           bill_date: string
@@ -455,6 +494,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      daily_attendance: {
+        Row: {
+          attendance_date: string
+          client_id: string
+          created_at: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          period_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_date: string
+          client_id: string
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          notes?: string | null
+          period_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_date?: string
+          client_id?: string
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          period_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_attendance_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
