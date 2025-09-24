@@ -4,16 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireAdmin?: boolean;
   requireClient?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requireAdmin = false, 
-  requireClient = false 
+  requireClient = false
 }) => {
-  const { adminSession, clientSession, isLoading } = useAuth();
+  const { clientSession, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,10 +21,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
       </div>
     );
-  }
-
-  if (requireAdmin && !adminSession) {
-    return <Navigate to="/admin" replace />;
   }
 
   if (requireClient && !clientSession) {

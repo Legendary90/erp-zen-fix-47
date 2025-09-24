@@ -4,12 +4,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   clientSession: string | null;
-  adminSession: string | null;
   user: any | null;
   clientId: string | null;
   isLoading: boolean;
   loginAsClient: (username: string, password: string) => Promise<boolean>;
-  loginAsAdmin: (username: string, password: string) => Promise<boolean>;
   registerClient: (companyName: string, password: string, email?: string, phone?: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -18,7 +16,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clientSession, setClientSession] = useState<string | null>(null);
-  const [adminSession, setAdminSession] = useState<string | null>(null);
   const [user, setUser] = useState<any | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +23,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check for existing sessions
     const storedClientSession = localStorage.getItem('client_session');
-    const storedAdminSession = localStorage.getItem('admin_session');
     const storedClientId = localStorage.getItem('current_client_id');
     
     if (storedClientSession) {
@@ -36,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser({ client_id: storedClientId });
       }
     }
-    if (storedAdminSession) setAdminSession(storedAdminSession);
     
     setIsLoading(false);
   }, []);
@@ -55,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (clientError || !client) {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials or access denied. Contact admin if account is inactive.",
+          description: "Invalid credentials or access denied.",
           variant: "destructive"
         });
         return false;
@@ -93,43 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginAsAdmin = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase.rpc('authenticate_admin_user', {
-        p_username: username,
-        p_password: password
-      });
-
-      if (error || !data || data.length === 0) {
-        toast({
-          title: "Admin Login Failed",
-          description: "Invalid admin credentials",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      const sessionToken = data[0].session_token;
-      localStorage.setItem('admin_session', sessionToken);
-      setAdminSession(sessionToken);
-
-      toast({
-        title: "Admin Login Successful",
-        description: "Welcome to the admin panel!"
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Admin login error:', error);
-      toast({
-        title: "Admin Login Error",
-        description: "An error occurred during admin login",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
   const registerClient = async (companyName: string, password: string, email?: string, phone?: string): Promise<boolean> => {
     try {
       // Generate client ID
@@ -156,14 +114,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password_hash: password,
           email: email || null,
           phone: phone || null,
-          access_status: false, // Requires admin approval
-          subscription_status: 'INACTIVE'
+          access_status: true, // Auto-approved
+          subscription_status: 'ACTIVE'
         });
 
       if (insertError) {
         toast({
           title: "Registration Failed",
-          description: "Failed to create account. Please try again.",
+          description: insertError.message.includes('duplicate key') ? "Company name already exists. Please choose a different name." : "Failed to create account. Please try again.",
           variant: "destructive"
         });
         return false;
@@ -171,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       toast({
         title: "Registration Successful",
-        description: "Account created! Please wait for admin approval to access the system.",
+        description: "Account created! You can now login with your company name and password.",
       });
 
       return true;
@@ -188,10 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('client_session');
-    localStorage.removeItem('admin_session');
     localStorage.removeItem('current_client_id');
     setClientSession(null);
-    setAdminSession(null);
     setUser(null);
     setClientId(null);
     toast({
@@ -203,12 +159,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{
       clientSession,
-      adminSession,
       user,
       clientId,
       isLoading,
       loginAsClient,
-      loginAsAdmin,
       registerClient,
       logout
     }}>

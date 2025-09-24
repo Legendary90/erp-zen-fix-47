@@ -232,35 +232,50 @@ export function EmployeeSection() {
     }
   };
 
-  // Calculate today's attendance from localStorage
-  const getTodayAttendance = () => {
+  // Calculate today's attendance from Supabase
+  const getTodayAttendance = async () => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const month = format(new Date(), 'MM');
-    const year = format(new Date(), 'yyyy');
-    const stored = localStorage.getItem(`attendance_${clientId}`);
     
-    if (!stored) return { present: 0, onLeave: 0 };
+    if (!clientId) return { present: 0, onLeave: 0 };
     
-    const attendance = JSON.parse(stored);
-    let present = 0;
-    let onLeave = 0;
-    
-    employees.forEach(emp => {
-      const empAttendance = attendance.find((a: any) => 
-        a.employeeId === emp.id && a.month === month && a.year === year
-      );
+    try {
+      const { data, error } = await supabase
+        .from('employee_attendance')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('date', today);
+
+      if (error) throw error;
+
+      let present = 0;
+      let onLeave = 0;
       
-      if (empAttendance) {
-        const todayRecord = empAttendance.records.find((r: any) => r.date === today);
-        if (todayRecord?.status === 'present') present++;
-        if (todayRecord?.status === 'on_leave') onLeave++;
-      }
-    });
-    
-    return { present, onLeave };
+      data?.forEach(record => {
+        if (record.status === 'present') present++;
+        if (record.status === 'leave') onLeave++;
+      });
+      
+      return { present, onLeave };
+    } catch (error) {
+      console.error('Error fetching today attendance:', error);
+      return { present: 0, onLeave: 0 };
+    }
   };
 
-  const { present: presentToday, onLeave } = getTodayAttendance();
+  const [attendanceStats, setAttendanceStats] = useState({ present: 0, onLeave: 0 });
+
+  useEffect(() => {
+    const loadAttendanceStats = async () => {
+      const stats = await getTodayAttendance();
+      setAttendanceStats(stats);
+    };
+    
+    if (clientId) {
+      loadAttendanceStats();
+    }
+  }, [clientId, employees]);
+
+  const { present: presentToday, onLeave } = attendanceStats;
   const totalEmployees = employees.length;
 
   return (
