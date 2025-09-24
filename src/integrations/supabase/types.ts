@@ -101,6 +101,7 @@ export type Database = {
           is_active: boolean | null
           last_login: string | null
           password_hash: string
+          user_id: string | null
           username: string
         }
         Insert: {
@@ -109,6 +110,7 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash: string
+          user_id?: string | null
           username: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash?: string
+          user_id?: string | null
           username?: string
         }
         Relationships: []
@@ -301,6 +304,7 @@ export type Database = {
           subscription_start_date: string | null
           subscription_status: string
           updated_at: string
+          user_id: string | null
           username: string
         }
         Insert: {
@@ -321,6 +325,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string
           updated_at?: string
+          user_id?: string | null
           username: string
         }
         Update: {
@@ -341,6 +346,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string
           updated_at?: string
+          user_id?: string | null
           username?: string
         }
         Relationships: []
@@ -482,6 +488,50 @@ export type Database = {
           },
         ]
       }
+      employee_attendance: {
+        Row: {
+          client_id: string
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          notes: string | null
+          period_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          date?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          period_id?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          period_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_attendance_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           attendance_days: number | null
@@ -494,6 +544,7 @@ export type Database = {
           id: string
           leave_days: number | null
           name: string
+          period_id: string | null
           phone: string | null
           position: string
           salary: number | null
@@ -511,6 +562,7 @@ export type Database = {
           id?: string
           leave_days?: number | null
           name: string
+          period_id?: string | null
           phone?: string | null
           position: string
           salary?: number | null
@@ -528,13 +580,22 @@ export type Database = {
           id?: string
           leave_days?: number | null
           name?: string
+          period_id?: string | null
           phone?: string | null
           position?: string
           salary?: number | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "employees_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expense_entries: {
         Row: {
@@ -1157,6 +1218,26 @@ export type Database = {
       generate_client_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_active_period: {
+        Args: { p_client_id: string }
+        Returns: string
+      }
+      get_client_id_for_user: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      hash_password: {
+        Args: { password: string }
+        Returns: string
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_period_editable: {
+        Args: { p_period_id: string }
+        Returns: boolean
       }
       validate_admin_session: {
         Args: { session_token: string }
