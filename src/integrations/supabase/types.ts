@@ -1463,6 +1463,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      create_test_client_complete: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       extend_client_subscription: {
         Args: { p_client_id: string; p_months?: number }
         Returns: boolean
