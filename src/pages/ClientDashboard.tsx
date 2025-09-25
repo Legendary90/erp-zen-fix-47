@@ -13,6 +13,7 @@ import { EmployeeSection } from '@/components/accounts/EmployeeSection';
 import { CustomerSalesSection } from '@/components/accounts/CustomerSalesSection';
 import { DocumentsTab } from '@/components/dashboard/DocumentsTab';
 import { AccountingPeriodsSection } from '@/components/accounts/AccountingPeriodsSection';
+import { UnifiedDataView } from '@/components/dashboard/UnifiedDataView';
 import { ChartOfAccountsSection } from '@/components/accounts/ChartOfAccountsSection';
 import { GeneralLedgerSection } from '@/components/accounts/GeneralLedgerSection';
 import { AccountsReceivableSection } from '@/components/accounts/AccountsReceivableSection';
@@ -49,11 +50,12 @@ import {
 
 export default function ClientDashboard() {
   const { logout } = useAuth();
-  const [activeSection, setActiveSection] = useState('sales');
+  const [activeSection, setActiveSection] = useState('data');
 
   const navigateToAccountingPeriods = () => setActiveSection('periods');
 
   const sidebarItems = [
+    { id: 'data', label: 'Data Management', icon: BarChart3, component: UnifiedDataView },
     { id: 'sales', label: 'Sales Management', icon: DollarSign, component: SalesSection },
     { id: 'purchases', label: 'Purchase Orders', icon: ShoppingCart, component: PurchasesSection },
     { id: 'expenses', label: 'Expense Tracking', icon: CreditCard, component: ExpensesSection },
