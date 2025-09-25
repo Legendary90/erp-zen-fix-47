@@ -202,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_tracking: {
+        Row: {
+          attendance_date: string
+          client_id: string
+          created_at: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          period_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_date: string
+          client_id: string
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          notes?: string | null
+          period_id?: string | null
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_date?: string
+          client_id?: string
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          period_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bills: {
         Row: {
           bill_date: string
@@ -352,6 +388,8 @@ export type Database = {
           last_login: string | null
           password_hash: string
           phone: string | null
+          subscription_billing_day: number | null
+          subscription_day: number | null
           subscription_end: string
           subscription_end_date: string | null
           subscription_start: string
@@ -373,6 +411,8 @@ export type Database = {
           last_login?: string | null
           password_hash: string
           phone?: string | null
+          subscription_billing_day?: number | null
+          subscription_day?: number | null
           subscription_end?: string
           subscription_end_date?: string | null
           subscription_start?: string
@@ -394,6 +434,8 @@ export type Database = {
           last_login?: string | null
           password_hash?: string
           phone?: string | null
+          subscription_billing_day?: number | null
+          subscription_day?: number | null
           subscription_end?: string
           subscription_end_date?: string | null
           subscription_start?: string
@@ -636,6 +678,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      employee_monthly_summary: {
+        Row: {
+          absent_days: number | null
+          client_id: string
+          created_at: string | null
+          employee_id: string
+          id: string
+          leave_days: number | null
+          month_number: number
+          period_id: string
+          present_days: number | null
+          total_days: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          absent_days?: number | null
+          client_id: string
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          leave_days?: number | null
+          month_number: number
+          period_id: string
+          present_days?: number | null
+          total_days?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          absent_days?: number | null
+          client_id?: string
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          leave_days?: number | null
+          month_number?: number
+          period_id?: string
+          present_days?: number | null
+          total_days?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
       }
       employees: {
         Row: {
@@ -1051,6 +1138,54 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_attendance_summary: {
+        Row: {
+          absent_days: number | null
+          client_id: string
+          created_at: string | null
+          employee_id: string
+          half_days: number | null
+          id: string
+          leave_days: number | null
+          month_number: number
+          period_id: string | null
+          present_days: number | null
+          total_working_days: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          absent_days?: number | null
+          client_id: string
+          created_at?: string | null
+          employee_id: string
+          half_days?: number | null
+          id?: string
+          leave_days?: number | null
+          month_number: number
+          period_id?: string | null
+          present_days?: number | null
+          total_working_days?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          absent_days?: number | null
+          client_id?: string
+          created_at?: string | null
+          employee_id?: string
+          half_days?: number | null
+          id?: string
+          leave_days?: number | null
+          month_number?: number
+          period_id?: string | null
+          present_days?: number | null
+          total_working_days?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       monthly_expenses: {
         Row: {
           amount: number
@@ -1308,6 +1443,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      calculate_next_billing_date: {
+        Args: { billing_day: number; start_date: string }
+        Returns: string
+      }
+      calculate_subscription_end_date: {
+        Args: { months?: number; start_date: string }
+        Returns: string
+      }
       check_expired_subscriptions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1316,7 +1459,15 @@ export type Database = {
         Args: { p_client_id: string }
         Returns: string
       }
+      create_test_client: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       extend_client_subscription: {
+        Args: { p_client_id: string; p_months?: number }
+        Returns: boolean
+      }
+      extend_client_subscription_by_months: {
         Args: { p_client_id: string; p_months?: number }
         Returns: boolean
       }

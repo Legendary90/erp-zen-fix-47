@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, TrendingUp, Shield, Clock, Zap, Settings } from "lucide-react";
+import { Building2, Users, TrendingUp, Shield, Clock, Zap, Settings, Building, FileText } from "lucide-react";
 
 const Index = () => {
   return (
@@ -38,60 +38,30 @@ const Index = () => {
           <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <Users className="h-8 w-8 text-blue-500 mb-2" />
-                <CardTitle>Employee Management</CardTitle>
+                <Building className="h-8 w-8 text-blue-500 mb-2" />
+                <CardTitle>Accounting & Finance</CardTitle>
                 <CardDescription>
-                  Complete workforce management with attendance tracking, payroll, and performance monitoring
+                  Complete financial management with profit/loss tracking and period-based accounting
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <TrendingUp className="h-8 w-8 text-green-500 mb-2" />
-                <CardTitle>Sales & Revenue</CardTitle>
+                <Users className="h-8 w-8 text-green-500 mb-2" />
+                <CardTitle>Employee Attendance</CardTitle>
                 <CardDescription>
-                  Track sales performance, manage customer relationships, and monitor revenue streams
+                  Daily attendance tracking with monthly summaries and comprehensive reporting
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <Building2 className="h-8 w-8 text-purple-500 mb-2" />
-                <CardTitle>Inventory Control</CardTitle>
+                <FileText className="h-8 w-8 text-purple-500 mb-2" />
+                <CardTitle>Document Management</CardTitle>
                 <CardDescription>
-                  Real-time inventory tracking, automated stock alerts, and supply chain optimization
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Shield className="h-8 w-8 text-red-500 mb-2" />
-                <CardTitle>Financial Management</CardTitle>
-                <CardDescription>
-                  Comprehensive accounting, expense tracking, and financial reporting capabilities
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Clock className="h-8 w-8 text-orange-500 mb-2" />
-                <CardTitle>Time Tracking</CardTitle>
-                <CardDescription>
-                  Advanced time tracking with project management and productivity analytics
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Zap className="h-8 w-8 text-yellow-500 mb-2" />
-                <CardTitle>Automation</CardTitle>
-                <CardDescription>
-                  Automated workflows, intelligent reporting, and streamlined business processes
+                  Create invoices, challans, balance sheets and manage all business documents
                 </CardDescription>
               </CardHeader>
             </Card>
