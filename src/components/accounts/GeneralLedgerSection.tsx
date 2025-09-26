@@ -1,41 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, BookOpen, TrendingUp, TrendingDown } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ExcelTable } from '@/components/common/ExcelTable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
-interface GLEntry {
+interface LedgerEntry {
   id: string;
-  period_id: string;
-  account_id: string;
   transaction_date: string;
   description: string;
+  account_name: string;
   debit_amount: number;
   credit_amount: number;
   reference_type: string;
-  reference_id: string;
-  created_at: string;
-  accounts: {
-    account_code: string;
-    account_name: string;
-  };
-  accounting_periods: {
-    period_name: string;
-  };
-}
-
-interface Account {
-  id: string;
-  account_code: string;
-  account_name: string;
+  period_id: string;
 }
 
 interface AccountingPeriod {
@@ -45,91 +29,116 @@ interface AccountingPeriod {
 }
 
 export function GeneralLedgerSection() {
-  const [entries, setEntries] = useState<GLEntry[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [periods, setPeriods] = useState<AccountingPeriod[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
-  const [description, setDescription] = useState('');
-  const [debitAmount, setDebitAmount] = useState('');
-  const [creditAmount, setCreditAmount] = useState('');
-  const [referenceType, setReferenceType] = useState('journal');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    transaction_date: new Date().toISOString().split('T')[0],
+    description: '',
+    account_name: '',
+    debit_amount: '',
+    credit_amount: '',
+    reference_type: 'manual'
+  });
   const { clientId } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
+    fetchPeriods();
   }, [clientId]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (selectedPeriod) {
+      fetchEntries();
+    }
+  }, [selectedPeriod]);
+
+  const fetchPeriods = async () => {
     if (!clientId) return;
 
-    // Fetch entries
-    const { data: entriesData, error: entriesError } = await supabase
-      .from('general_ledger')
-      .select(`
-        *,
-        accounts(account_code, account_name),
-        accounting_periods(period_name)
-      `)
-      .eq('client_id', clientId)
-      .order('transaction_date', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('accounting_periods')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('start_date', { ascending: false });
 
-    if (entriesError) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch general ledger entries",
-        variant: "destructive",
-      });
-    } else {
-      setEntries(entriesData || []);
-    }
+      if (error) throw error;
+      setPeriods(data || []);
 
-    // Fetch accounts
-    const { data: accountsData, error: accountsError } = await supabase
-      .from('accounts')
-      .select('id, account_code, account_name')
-      .eq('client_id', clientId)
-      .eq('is_active', true)
-      .order('account_code');
-
-    if (!accountsError) {
-      setAccounts(accountsData || []);
-    }
-
-    // Fetch periods
-    const { data: periodsData, error: periodsError } = await supabase
-      .from('accounting_periods')
-      .select('id, period_name, status')
-      .eq('client_id', clientId)
-      .order('start_date', { ascending: false });
-
-    if (!periodsError) {
-      setPeriods(periodsData || []);
-      // Set active period as default
-      const activePeriod = periodsData?.find(p => p.status === 'active');
+      const activePeriod = data?.find(p => p.status === 'active');
       if (activePeriod) {
         setSelectedPeriod(activePeriod.id);
       }
+    } catch (error) {
+      console.error('Error fetching periods:', error);
     }
   };
 
-  const createEntry = async () => {
-    if (!selectedPeriod || !selectedAccount || !transactionDate || !description || !clientId) {
+  const fetchEntries = async () => {
+    if (!clientId || !selectedPeriod) return;
+
+    try {
+      // Get sales entries as credits
+      const { data: salesData } = await supabase
+        .from('sales_entries')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('period_id', selectedPeriod);
+
+      // Get expense entries as debits
+      const { data: expenseData } = await supabase
+        .from('expense_entries')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('period_id', selectedPeriod);
+
+      const combinedEntries: LedgerEntry[] = [
+        ...(salesData || []).map(item => ({
+          id: item.id,
+          transaction_date: item.date,
+          description: item.description,
+          account_name: item.category || 'Sales Revenue',
+          debit_amount: 0,
+          credit_amount: item.amount,
+          reference_type: 'sales',
+          period_id: item.period_id
+        })),
+        ...(expenseData || []).map(item => ({
+          id: item.id,
+          transaction_date: item.date,
+          description: item.description,
+          account_name: item.category || 'Expenses',
+          debit_amount: item.amount,
+          credit_amount: 0,
+          reference_type: 'expense',
+          period_id: item.period_id
+        }))
+      ];
+
+      // Sort by date descending
+      combinedEntries.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
+      setEntries(combinedEntries);
+    } catch (error) {
+      console.error('Error fetching entries:', error);
+    }
+  };
+
+  const addEntry = async () => {
+    if (!formData.description || !formData.account_name || !clientId || !selectedPeriod) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields and select a period",
         variant: "destructive",
       });
       return;
     }
 
-    const debit = parseFloat(debitAmount) || 0;
-    const credit = parseFloat(creditAmount) || 0;
+    const debitAmount = parseFloat(formData.debit_amount) || 0;
+    const creditAmount = parseFloat(formData.credit_amount) || 0;
 
-    if (debit === 0 && credit === 0) {
+    if (debitAmount === 0 && creditAmount === 0) {
       toast({
         title: "Error",
         description: "Please enter either a debit or credit amount",
@@ -138,47 +147,84 @@ export function GeneralLedgerSection() {
       return;
     }
 
-    if (debit > 0 && credit > 0) {
-      toast({
-        title: "Error",
-        description: "Please enter either a debit OR credit amount, not both",
-        variant: "destructive",
-      });
-      return;
-    }
+    try {
+      // Determine which table to use based on debit/credit
+      const table = debitAmount > 0 ? 'expense_entries' : 'sales_entries';
+      const amount = debitAmount > 0 ? debitAmount : creditAmount;
 
-    const { error } = await supabase
-      .from('general_ledger')
-      .insert([{
-        client_id: clientId,
-        period_id: selectedPeriod,
-        account_id: selectedAccount,
-        transaction_date: transactionDate,
-        description: description,
-        debit_amount: debit,
-        credit_amount: credit,
-        reference_type: referenceType
-      }]);
+      const { error } = await supabase
+        .from(table)
+        .insert({
+          client_id: clientId,
+          period_id: selectedPeriod,
+          description: formData.description,
+          amount: amount,
+          date: formData.transaction_date,
+          category: formData.account_name
+        });
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create general ledger entry",
-        variant: "destructive",
-      });
-    } else {
+      if (error) throw error;
+
       toast({
         title: "Success",
-        description: "General ledger entry created successfully",
+        description: "Ledger entry added successfully",
       });
-      setTransactionDate('');
-      setDescription('');
-      setDebitAmount('');
-      setCreditAmount('');
+
+      setFormData({
+        transaction_date: new Date().toISOString().split('T')[0],
+        description: '',
+        account_name: '',
+        debit_amount: '',
+        credit_amount: '',
+        reference_type: 'manual'
+      });
       setIsDialogOpen(false);
-      fetchData();
+      fetchEntries();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add ledger entry",
+        variant: "destructive",
+      });
     }
   };
+
+  const onDelete = async (item: LedgerEntry) => {
+    if (!confirm('Are you sure you want to delete this entry?')) return;
+
+    const table = item.reference_type === 'expense' ? 'expense_entries' : 'sales_entries';
+
+    try {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Entry deleted successfully",
+      });
+
+      fetchEntries();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete entry",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const columns = [
+    { key: 'transaction_date', label: 'Date', type: 'date' },
+    { key: 'description', label: 'Description' },
+    { key: 'account_name', label: 'Account' },
+    { key: 'debit_amount', label: 'Debit', type: 'number' },
+    { key: 'credit_amount', label: 'Credit', type: 'number' },
+    { key: 'reference_type', label: 'Reference' }
+  ];
 
   const totalDebits = entries.reduce((sum, entry) => sum + entry.debit_amount, 0);
   const totalCredits = entries.reduce((sum, entry) => sum + entry.credit_amount, 0);
@@ -188,66 +234,47 @@ export function GeneralLedgerSection() {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-2xl font-bold">General Ledger</h3>
-          <p className="text-muted-foreground">Complete record of all financial transactions</p>
+          <p className="text-muted-foreground">Track all financial transactions and account balances</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Entry
+              Add Entry
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create General Ledger Entry</DialogTitle>
+              <DialogTitle>Add Ledger Entry</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="period">Accounting Period</Label>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periods.map((period) => (
-                      <SelectItem key={period.id} value={period.id}>
-                        {period.period_name} ({period.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="account">Account</Label>
-                <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.account_code} - {account.account_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">Transaction Date</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={transactionDate}
-                  onChange={(e) => setTransactionDate(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Transaction Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.transaction_date}
+                    onChange={(e) => setFormData({...formData, transaction_date: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="account">Account Name</Label>
+                  <Input
+                    id="account"
+                    value={formData.account_name}
+                    onChange={(e) => setFormData({...formData, account_name: e.target.value})}
+                    placeholder="Account name"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
+                <Input
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter transaction description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Transaction description"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -257,11 +284,8 @@ export function GeneralLedgerSection() {
                     id="debit"
                     type="number"
                     step="0.01"
-                    value={debitAmount}
-                    onChange={(e) => {
-                      setCreditAmount('');
-                      setDebitAmount(e.target.value);
-                    }}
+                    value={formData.debit_amount}
+                    onChange={(e) => setFormData({...formData, debit_amount: e.target.value, credit_amount: ''})}
                     placeholder="0.00"
                   />
                 </div>
@@ -271,115 +295,72 @@ export function GeneralLedgerSection() {
                     id="credit"
                     type="number"
                     step="0.01"
-                    value={creditAmount}
-                    onChange={(e) => {
-                      setDebitAmount('');
-                      setCreditAmount(e.target.value);
-                    }}
+                    value={formData.credit_amount}
+                    onChange={(e) => setFormData({...formData, credit_amount: e.target.value, debit_amount: ''})}
                     placeholder="0.00"
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reference-type">Reference Type</Label>
-                <Select value={referenceType} onValueChange={setReferenceType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="journal">Journal Entry</SelectItem>
-                    <SelectItem value="invoice">Invoice</SelectItem>
-                    <SelectItem value="payment">Payment</SelectItem>
-                    <SelectItem value="adjustment">Adjustment</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={createEntry}>Create Entry</Button>
+              <Button onClick={addEntry}>Add Entry</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{entries.length}</div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Period Selection</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select accounting period" />
+            </SelectTrigger>
+            <SelectContent>
+              {periods.map((period) => (
+                <SelectItem key={period.id} value={period.id}>
+                  {period.period_name} ({period.status})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <BookOpen className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalDebits.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-red-600">${totalDebits.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
+            <BookOpen className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalCredits.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">${totalCredits.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>General Ledger Entries</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Account</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Debit</TableHead>
-                <TableHead>Credit</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>{new Date(entry.transaction_date).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="font-medium">{entry.accounts.account_code}</div>
-                    <div className="text-sm text-muted-foreground">{entry.accounts.account_name}</div>
-                  </TableCell>
-                  <TableCell>{entry.description}</TableCell>
-                  <TableCell className="text-green-600 font-medium">
-                    {entry.debit_amount > 0 ? `$${entry.debit_amount.toFixed(2)}` : '-'}
-                  </TableCell>
-                  <TableCell className="text-red-600 font-medium">
-                    {entry.credit_amount > 0 ? `$${entry.credit_amount.toFixed(2)}` : '-'}
-                  </TableCell>
-                  <TableCell>{entry.accounting_periods.period_name}</TableCell>
-                  <TableCell className="capitalize">{entry.reference_type}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {entries.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No general ledger entries found. Create your first entry to get started.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ExcelTable
+        title="General Ledger Entries"
+        columns={columns}
+        data={entries}
+        onDelete={onDelete}
+        showActions={true}
+        className="min-h-[400px]"
+      />
     </div>
   );
 }

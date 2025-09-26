@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { ExcelTable } from '@/components/common/ExcelTable';
 import { BarChart3 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MonthlySummaryData {
   id: string;
@@ -20,10 +21,12 @@ interface MonthlySummaryData {
 }
 
 interface MonthlySummaryProps {
-  clientId: string;
+  clientId?: string;
 }
 
-export function MonthlySummary({ clientId }: MonthlySummaryProps) {
+export function MonthlySummary({ clientId: propClientId }: MonthlySummaryProps) {
+  const { clientId: authClientId } = useAuth();
+  const clientId = propClientId || authClientId;
   const [summaryData, setSummaryData] = useState<MonthlySummaryData[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());

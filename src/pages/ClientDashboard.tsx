@@ -50,12 +50,11 @@ import {
 
 export default function ClientDashboard() {
   const { logout } = useAuth();
-  const [activeSection, setActiveSection] = useState('data');
+  const [activeSection, setActiveSection] = useState('sales');
 
   const navigateToAccountingPeriods = () => setActiveSection('periods');
 
   const sidebarItems = [
-    { id: 'data', label: 'Data Management', icon: BarChart3, component: UnifiedDataView },
     { id: 'sales', label: 'Sales Management', icon: DollarSign, component: SalesSection },
     { id: 'purchases', label: 'Purchase Orders', icon: ShoppingCart, component: PurchasesSection },
     { id: 'expenses', label: 'Expense Tracking', icon: CreditCard, component: ExpensesSection },

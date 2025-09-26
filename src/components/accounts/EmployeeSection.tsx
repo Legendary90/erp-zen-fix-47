@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTracker } from './AttendanceTracker';
+import { MonthlySummary } from '@/components/attendance/MonthlySummary';
 import { format } from 'date-fns';
 
 interface Employee {
@@ -458,9 +459,10 @@ export function EmployeeSection() {
       </div>
 
       <Tabs defaultValue="records" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="records">Employee Records</TabsTrigger>
           <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
+          <TabsTrigger value="summary">Monthly Summary</TabsTrigger>
         </TabsList>
         
         <TabsContent value="records" className="space-y-4">
@@ -537,6 +539,10 @@ export function EmployeeSection() {
         
         <TabsContent value="attendance">
           <AttendanceTracker employees={employees} clientId={clientId || ''} />
+        </TabsContent>
+        
+        <TabsContent value="summary">
+          <MonthlySummary />
         </TabsContent>
       </Tabs>
     </div>

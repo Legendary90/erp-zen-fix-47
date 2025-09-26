@@ -308,17 +308,17 @@ export function AccountsReceivableSection() {
                     onChange={(e) => setTaxAmount(e.target.value)}
                     placeholder="0.00"
                   />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes..."
-                />
-              </div>
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <Label htmlFor="notes">Notes</Label>
+                 <Textarea
+                   id="notes"
+                   value={notes}
+                   onChange={(e) => setNotes(e.target.value)}
+                   placeholder="Additional notes..."
+                 />
+               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
