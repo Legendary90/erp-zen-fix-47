@@ -347,8 +347,8 @@ export function SalesSection({ navigateToAccountingPeriods }: SalesSectionProps 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600 flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              ${totalSales.toLocaleString()}
+              <span className="text-green-600">Rs</span>
+              {totalSales.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -387,7 +387,7 @@ export function SalesSection({ navigateToAccountingPeriods }: SalesSectionProps 
                     <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.description}</TableCell>
                     <TableCell>{entry.category || '-'}</TableCell>
-                    <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                    <TableCell className="font-mono">Rs {entry.amount.toLocaleString()}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         entry.payment_status === 'paid' ? 'bg-green-100 text-green-800' :

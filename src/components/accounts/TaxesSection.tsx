@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,26 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Receipt, FileText } from 'lucide-react';
+import { Receipt, FileText, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+
+interface TaxRecord {
+  id: string;
+  type: string;
+  amount: number;
+  period: string;
+  due_date: string;
+  status: string;
+  description: string;
+  created_at: string;
+}
 
 export function TaxesSection() {
-  const [taxRecords, setTaxRecords] = useState([]);
+  const { clientId } = useAuth();
+  const { toast } = useToast();
+  const [taxRecords, setTaxRecords] = useState<TaxRecord[]>([]);
   const [formData, setFormData] = useState({
     type: '',
     amount: '',
@@ -19,17 +35,49 @@ export function TaxesSection() {
     description: ''
   });
 
+  useEffect(() => {
+    if (clientId) {
+      loadTaxRecords();
+    }
+  }, [clientId]);
+
+  const loadTaxRecords = async () => {
+    if (!clientId) return;
+
+    // Since we don't have a tax_records table, we'll use local state
+    const storedRecords = localStorage.getItem(`tax_records_${clientId}`);
+    if (storedRecords) {
+      setTaxRecords(JSON.parse(storedRecords));
+    }
+  };
+
+  const saveTaxRecords = (records: TaxRecord[]) => {
+    if (clientId) {
+      localStorage.setItem(`tax_records_${clientId}`, JSON.stringify(records));
+      setTaxRecords(records);
+    }
+  };
+
   const addTaxRecord = () => {
-    if (!formData.type || !formData.amount) return;
+    if (!formData.type || !formData.amount || !clientId) {
+      toast({
+        title: "Error",
+        description: "Please fill in required fields",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const newRecord = {
-      id: Date.now(),
+    const newRecord: TaxRecord = {
+      id: Date.now().toString(),
       ...formData,
       amount: parseFloat(formData.amount),
       created_at: new Date().toISOString()
     };
     
-    setTaxRecords([newRecord, ...taxRecords]);
+    const updatedRecords = [newRecord, ...taxRecords];
+    saveTaxRecords(updatedRecords);
+    
     setFormData({
       type: '',
       amount: '',
@@ -37,6 +85,23 @@ export function TaxesSection() {
       due_date: '',
       status: 'pending',
       description: ''
+    });
+
+    toast({
+      title: "Success",
+      description: "Tax record added successfully"
+    });
+  };
+
+  const deleteTaxRecord = (id: string) => {
+    if (!confirm('Are you sure you want to delete this tax record?')) return;
+    
+    const updatedRecords = taxRecords.filter(r => r.id !== id);
+    saveTaxRecords(updatedRecords);
+
+    toast({
+      title: "Success",
+      description: "Tax record deleted successfully"
     });
   };
 
@@ -57,7 +122,7 @@ export function TaxesSection() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalTaxes.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs {totalTaxes.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -66,7 +131,7 @@ export function TaxesSection() {
             <Receipt className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${paidTaxes.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">Rs {paidTaxes.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -75,7 +140,7 @@ export function TaxesSection() {
             <Receipt className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">${(totalTaxes - paidTaxes).toFixed(2)}</div>
+            <div className="text-2xl font-bold text-red-600">Rs {(totalTaxes - paidTaxes).toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
@@ -88,7 +153,7 @@ export function TaxesSection() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="type">Tax Type</Label>
+              <Label htmlFor="type">Tax Type *</Label>
               <Input
                 id="type"
                 value={formData.type}
@@ -97,7 +162,7 @@ export function TaxesSection() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Amount *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -191,7 +256,7 @@ export function TaxesSection() {
                 <TableRow key={record.id}>
                   <TableCell>{record.type}</TableCell>
                   <TableCell>{record.period}</TableCell>
-                  <TableCell>${record.amount.toFixed(2)}</TableCell>
+                  <TableCell>Rs {record.amount.toFixed(2)}</TableCell>
                   <TableCell>{record.due_date ? new Date(record.due_date).toLocaleDateString() : '-'}</TableCell>
                   <TableCell>
                     <Badge variant={record.status === 'paid' ? 'default' : 'secondary'}>
@@ -202,9 +267,9 @@ export function TaxesSection() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => setTaxRecords(taxRecords.filter(r => r.id !== record.id))}
+                      onClick={() => deleteTaxRecord(record.id)}
                     >
-                      Remove
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

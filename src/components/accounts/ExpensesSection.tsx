@@ -385,7 +385,7 @@ export function ExpensesSection({ navigateToAccountingPeriods }: ExpensesSection
           <CardContent>
             <div className="text-2xl font-bold text-red-600 flex items-center gap-2">
               <Receipt className="h-5 w-5" />
-              ${totalDailyExpenses.toLocaleString()}
+              Rs {totalDailyExpenses.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -397,7 +397,7 @@ export function ExpensesSection({ navigateToAccountingPeriods }: ExpensesSection
           <CardContent>
             <div className="text-2xl font-bold text-orange-600 flex items-center gap-2">
               <Receipt className="h-5 w-5" />
-              ${totalMonthlyExpenses.toLocaleString()}
+              Rs {totalMonthlyExpenses.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -437,7 +437,7 @@ export function ExpensesSection({ navigateToAccountingPeriods }: ExpensesSection
                         <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-medium">{entry.description}</TableCell>
                         <TableCell>{entry.category || '-'}</TableCell>
-                        <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                        <TableCell className="font-mono">Rs {entry.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           <Button
                             variant="destructive"
@@ -485,7 +485,7 @@ export function ExpensesSection({ navigateToAccountingPeriods }: ExpensesSection
                         <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-medium">{entry.description}</TableCell>
                         <TableCell>{entry.category || '-'}</TableCell>
-                        <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                        <TableCell className="font-mono">Rs {entry.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           <Button
                             variant="destructive"

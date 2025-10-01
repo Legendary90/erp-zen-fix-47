@@ -76,7 +76,7 @@ export default function ClientDashboard() {
     { id: 'crm', label: 'Customer Relations', icon: UserCheck, component: CustomerSalesSection },
     { id: 'taxmgt', label: 'Tax Compliance', icon: Settings, component: TaxManagementSection },
     { id: 'audit', label: 'Audit Trail', icon: Clock, component: AuditTrailSection },
-    { id: 'documents', label: 'Document Center', icon: FolderOpen, component: DocumentsTab },
+    { id: 'documents', label: 'Document Center', icon: FolderOpen, component: DocumentsTab }
   ];
 
   const ActiveComponent = sidebarItems.find(item => item.id === activeSection)?.component || SalesSection;

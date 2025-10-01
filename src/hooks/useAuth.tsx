@@ -68,6 +68,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
+      // Check if subscription is active and access is enabled
+      if (client.subscription_status !== 'ACTIVE') {
+        toast({
+          title: "Access Denied",
+          description: "Your subscription is not active. Please contact admin.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       // Update last login
       await supabase
         .from('clients')
@@ -126,8 +136,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password_hash: password,
           email: email || null,
           phone: phone || null,
-          access_status: true, // Auto-approved
-          subscription_status: 'ACTIVE'
+          access_status: false, // Disabled by default - admin must enable
+          subscription_status: 'INACTIVE',
+          subscription_start_date: new Date().toISOString(),
+          subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
 
       if (insertError) {
@@ -141,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       toast({
         title: "Registration Successful",
-        description: "Account created! You can now login with your company name and password.",
+        description: "Account created! Please wait for admin approval before logging in. You will be contacted once your account is activated.",
       });
 
       return true;

@@ -335,7 +335,7 @@ export function AccountsPayableSection() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalOutstanding.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs {totalOutstanding.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -399,8 +399,8 @@ export function AccountsPayableSection() {
                   </TableCell>
                   <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
                   <TableCell>{new Date(bill.due_date).toLocaleDateString()}</TableCell>
-                  <TableCell>${bill.total_amount.toFixed(2)}</TableCell>
-                  <TableCell>${bill.paid_amount.toFixed(2)}</TableCell>
+                  <TableCell>Rs {bill.total_amount.toFixed(2)}</TableCell>
+                  <TableCell>Rs {bill.paid_amount.toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(bill.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">

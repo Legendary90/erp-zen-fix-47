@@ -34,7 +34,7 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<Client>>({});
+  const [editForm, setEditForm] = useState<Partial<Client & { password_hash?: string }>>({});
 
   // Redirect if not admin
   useEffect(() => {
@@ -221,7 +221,7 @@ const AdminDashboard: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Paid Subscriptions</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Rs</span>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{paidSubscriptions}</div>
@@ -352,6 +352,15 @@ const AdminDashboard: React.FC = () => {
                 id="phone"
                 value={editForm.phone || ''}
                 onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Password (leave empty to keep current)</Label>
+              <Input
+                id="password"
+                type="password"
+                onChange={(e) => setEditForm({ ...editForm, password_hash: e.target.value })}
+                placeholder="Enter new password"
               />
             </div>
             <div className="flex gap-4 pt-4">

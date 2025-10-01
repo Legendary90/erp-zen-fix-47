@@ -334,7 +334,7 @@ export function PurchasesSection({ navigateToAccountingPeriods }: PurchasesSecti
           <CardContent>
             <div className="text-2xl font-bold text-blue-600 flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
-              ${totalPurchases.toLocaleString()}
+              Rs {totalPurchases.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -372,7 +372,7 @@ export function PurchasesSection({ navigateToAccountingPeriods }: PurchasesSecti
                     <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.description}</TableCell>
                     <TableCell>{entry.category || '-'}</TableCell>
-                    <TableCell className="font-mono">${entry.amount.toLocaleString()}</TableCell>
+                    <TableCell className="font-mono">Rs {entry.amount.toLocaleString()}</TableCell>
                     <TableCell>
                       <Button
                         variant="destructive"
