@@ -19,6 +19,7 @@ export type Database = {
           client_id: string
           created_at: string
           end_date: string
+          fiscal_year_id: string | null
           id: string
           period_name: string
           period_type: string
@@ -30,6 +31,7 @@ export type Database = {
           client_id: string
           created_at?: string
           end_date: string
+          fiscal_year_id?: string | null
           id?: string
           period_name: string
           period_type?: string
@@ -41,6 +43,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           end_date?: string
+          fiscal_year_id?: string | null
           id?: string
           period_name?: string
           period_type?: string
@@ -48,7 +51,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounting_periods_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       accounts: {
         Row: {
@@ -643,7 +654,7 @@ export type Database = {
           employee_id: string
           id: string
           notes: string | null
-          period_id: string | null
+          period_id: string
           status: string
           updated_at: string
         }
@@ -654,7 +665,7 @@ export type Database = {
           employee_id: string
           id?: string
           notes?: string | null
-          period_id?: string | null
+          period_id: string
           status: string
           updated_at?: string
         }
@@ -665,7 +676,7 @@ export type Database = {
           employee_id?: string
           id?: string
           notes?: string | null
-          period_id?: string | null
+          period_id?: string
           status?: string
           updated_at?: string
         }
@@ -836,6 +847,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fiscal_years: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          end_date: string
+          id: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          year_name: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+          year_name: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          year_name?: string
+        }
+        Relationships: []
       }
       general_ledger: {
         Row: {
@@ -1477,6 +1521,10 @@ export type Database = {
       }
       generate_client_id: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_active_fiscal_year: {
+        Args: { p_client_id: string }
         Returns: string
       }
       get_active_period: {

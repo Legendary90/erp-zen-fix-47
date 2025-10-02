@@ -218,12 +218,12 @@ export function GeneralLedgerSection() {
   };
 
   const columns = [
-    { key: 'transaction_date', label: 'Date', type: 'date' },
-    { key: 'description', label: 'Description' },
-    { key: 'account_name', label: 'Account' },
-    { key: 'debit_amount', label: 'Debit', type: 'number' },
-    { key: 'credit_amount', label: 'Credit', type: 'number' },
-    { key: 'reference_type', label: 'Reference' }
+    { key: 'transaction_date', label: 'Date', type: 'date' as const },
+    { key: 'description', label: 'Description', type: 'text' as const },
+    { key: 'account_name', label: 'Account', type: 'text' as const },
+    { key: 'debit_amount', label: 'Debit', type: 'number' as const },
+    { key: 'credit_amount', label: 'Credit', type: 'number' as const },
+    { key: 'reference_type', label: 'Reference', type: 'text' as const }
   ];
 
   const totalDebits = entries.reduce((sum, entry) => sum + entry.debit_amount, 0);
