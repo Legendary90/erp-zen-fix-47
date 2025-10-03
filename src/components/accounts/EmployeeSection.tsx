@@ -9,12 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Calendar, Trash2, Edit, Check, X, Clock } from 'lucide-react';
+import { Plus, Users, Calendar, Trash2, Edit, Check, X, Clock, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTracker } from './AttendanceTracker';
-import { MonthlySummary } from '@/components/attendance/MonthlySummary';
 import { format } from 'date-fns';
 
 interface Employee {
@@ -33,8 +32,20 @@ interface Employee {
   created_at: string;
 }
 
+interface EmployeeMonthlySummary {
+  total_working_days: number;
+  present_days: number;
+  absent_days: number;
+  leave_days: number;
+  half_days: number;
+  attendance_percentage: string;
+}
+
 export function EmployeeSection() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [monthlySummaries, setMonthlySummaries] = useState<Record<string, EmployeeMonthlySummary>>({});
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
@@ -55,7 +66,8 @@ export function EmployeeSection() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [clientId]);
+    fetchMonthlySummaries();
+  }, [clientId, selectedMonth, selectedYear]);
 
   const fetchEmployees = async () => {
     if (!clientId) return;
@@ -74,6 +86,50 @@ export function EmployeeSection() {
       });
     } else {
       setEmployees(data || []);
+    }
+  };
+
+  const fetchMonthlySummaries = async () => {
+    if (!clientId) return;
+
+    try {
+      // Get all employees first
+      const { data: employees, error: empError } = await supabase
+        .from('employees')
+        .select('id, name, employee_code')
+        .eq('client_id', clientId);
+
+      if (empError) throw empError;
+
+      // Get monthly summary data
+      const { data: summaries, error: summError } = await supabase
+        .from('monthly_attendance_summary')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('month_number', selectedMonth)
+        .eq('year', selectedYear);
+
+      if (summError) throw summError;
+
+      // Create a map of employee_id to summary data
+      const summaryMap: Record<string, EmployeeMonthlySummary> = {};
+      
+      summaries?.forEach(item => {
+        summaryMap[item.employee_id] = {
+          total_working_days: item.total_working_days || 0,
+          present_days: item.present_days || 0,
+          absent_days: item.absent_days || 0,
+          leave_days: item.leave_days || 0,
+          half_days: item.half_days || 0,
+          attendance_percentage: (item.total_working_days || 0) > 0 
+            ? `${(((item.present_days || 0) + ((item.half_days || 0) * 0.5)) / (item.total_working_days || 1) * 100).toFixed(1)}%`
+            : '0%'
+        };
+      });
+
+      setMonthlySummaries(summaryMap);
+    } catch (error) {
+      console.error('Error loading monthly summaries:', error);
     }
   };
 
@@ -459,90 +515,176 @@ export function EmployeeSection() {
       </div>
 
       <Tabs defaultValue="records" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="records">Employee Records</TabsTrigger>
           <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
-          <TabsTrigger value="summary">Monthly Summary</TabsTrigger>
         </TabsList>
         
         <TabsContent value="records" className="space-y-4">
-          <Card>
+          <Card className="border-2 border-primary/20">
             <CardHeader>
-              <CardTitle>Employee Records</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <CardTitle>Employee Records & Monthly Summary</CardTitle>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Select 
+                    value={selectedMonth.toString()} 
+                    onValueChange={(value) => setSelectedMonth(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">January</SelectItem>
+                      <SelectItem value="2">February</SelectItem>
+                      <SelectItem value="3">March</SelectItem>
+                      <SelectItem value="4">April</SelectItem>
+                      <SelectItem value="5">May</SelectItem>
+                      <SelectItem value="6">June</SelectItem>
+                      <SelectItem value="7">July</SelectItem>
+                      <SelectItem value="8">August</SelectItem>
+                      <SelectItem value="9">September</SelectItem>
+                      <SelectItem value="10">October</SelectItem>
+                      <SelectItem value="11">November</SelectItem>
+                      <SelectItem value="12">December</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select 
+                    value={selectedYear.toString()} 
+                    onValueChange={(value) => setSelectedYear(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <CardDescription>
+                View employee information and monthly attendance statistics for {
+                  ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][selectedMonth - 1]
+                } {selectedYear}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Attendance</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {employees.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell className="font-mono">{employee.employee_code}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{employee.name}</div>
-                        {employee.email && (
-                          <div className="text-sm text-muted-foreground">{employee.email}</div>
-                        )}
-                      </TableCell>
-                      <TableCell>{employee.position}</TableCell>
-                      <TableCell>{employee.department || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={employee.status === 'active' ? 'default' : employee.status === 'on_leave' ? 'secondary' : 'outline'}>
-                          {employee.status === 'active' ? 'Active' : employee.status === 'on_leave' ? 'On Leave' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div>Present: {employee.attendance_days} days</div>
-                          <div>Leave: {employee.leave_days} days</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditDialog(employee)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteEmployee(employee.id, employee.name)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-semibold">Code</TableHead>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Position</TableHead>
+                      <TableHead className="font-semibold">Department</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold text-center">Total Days</TableHead>
+                      <TableHead className="font-semibold text-center">Present</TableHead>
+                      <TableHead className="font-semibold text-center">Absent</TableHead>
+                      <TableHead className="font-semibold text-center">Leave</TableHead>
+                      <TableHead className="font-semibold text-center">Half Days</TableHead>
+                      <TableHead className="font-semibold text-center">Attendance %</TableHead>
+                      <TableHead className="font-semibold text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {employees.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No employees found. Add your first employee to get started.
-                </div>
-              )}
+                  </TableHeader>
+                  <TableBody>
+                    {employees.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                          No employees found. Add your first employee to get started.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      employees.map((employee) => {
+                        const summary = monthlySummaries[employee.id];
+                        return (
+                          <TableRow key={employee.id} className="hover:bg-muted/50">
+                            <TableCell className="font-mono font-medium">{employee.employee_code}</TableCell>
+                            <TableCell>
+                              <div className="font-medium">{employee.name}</div>
+                              {employee.email && (
+                                <div className="text-sm text-muted-foreground">{employee.email}</div>
+                              )}
+                            </TableCell>
+                            <TableCell>{employee.position}</TableCell>
+                            <TableCell>{employee.department || '-'}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                employee.status === 'active' ? 'default' : 
+                                employee.status === 'on_leave' ? 'secondary' : 'outline'
+                              }>
+                                {employee.status === 'active' ? 'Active' : 
+                                 employee.status === 'on_leave' ? 'On Leave' : 'Inactive'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono">
+                                {summary?.total_working_days || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono bg-green-50 text-green-700 border-green-200">
+                                {summary?.present_days || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono bg-red-50 text-red-700 border-red-200">
+                                {summary?.absent_days || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-200">
+                                {summary?.leave_days || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono bg-orange-50 text-orange-700 border-orange-200">
+                                {summary?.half_days || 0}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="font-mono font-semibold bg-primary/10 text-primary border-primary/30">
+                                {summary?.attendance_percentage || '0%'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEditDialog(employee)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteEmployee(employee.id, employee.name)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="space-y-4">
           <AttendanceTracker employees={employees} clientId={clientId || ''} />
-        </TabsContent>
-        
-        <TabsContent value="summary">
-          <MonthlySummary />
         </TabsContent>
       </Tabs>
     </div>
