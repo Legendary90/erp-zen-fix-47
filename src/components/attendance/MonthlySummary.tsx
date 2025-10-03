@@ -37,46 +37,48 @@ export function MonthlySummary({ clientId: propClientId }: MonthlySummaryProps) 
   }, [clientId, selectedMonth, selectedYear]);
 
   const loadMonthlySummary = async () => {
+    if (!clientId) return;
+    
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First get all employees
+      const { data: employees, error: empError } = await supabase
+        .from('employees')
+        .select('id, name, employee_code')
+        .eq('client_id', clientId);
+
+      if (empError) throw empError;
+
+      // Then get monthly summary data
+      const { data: summaries, error: summError } = await supabase
         .from('monthly_attendance_summary')
-        .select(`
-          id,
-          employee_id,
-          month_number,
-          year,
-          total_working_days,
-          present_days,
-          absent_days,
-          leave_days,
-          half_days,
-          employees!inner (
-            name,
-            employee_code
-          )
-        `)
+        .select('*')
         .eq('client_id', clientId)
         .eq('month_number', selectedMonth)
         .eq('year', selectedYear);
 
-      if (error) throw error;
+      if (summError) throw summError;
 
-      const formattedData = data?.map(item => ({
-        id: item.id,
-        employee_name: (item.employees as any)?.name || 'Unknown',
-        employee_code: (item.employees as any)?.employee_code || 'N/A',
-        month_number: item.month_number,
-        year: item.year,
-        total_working_days: item.total_working_days,
-        present_days: item.present_days,
-        absent_days: item.absent_days,
-        leave_days: item.leave_days,
-        half_days: item.half_days,
-        attendance_percentage: item.total_working_days > 0 
-          ? `${((item.present_days + (item.half_days * 0.5)) / item.total_working_days * 100).toFixed(1)}%`
-          : '0%'
-      })) || [];
+      // Combine the data
+      const formattedData = summaries?.map(item => {
+        const employee = employees?.find(emp => emp.id === item.employee_id);
+        return {
+          id: item.id,
+          employee_name: employee?.name || 'Unknown',
+          employee_code: employee?.employee_code || 'N/A',
+          month_number: item.month_number,
+          year: item.year,
+          total_working_days: item.total_working_days || 0,
+          present_days: item.present_days || 0,
+          absent_days: item.absent_days || 0,
+          leave_days: item.leave_days || 0,
+          half_days: item.half_days || 0,
+          attendance_percentage: (item.total_working_days || 0) > 0 
+            ? `${(((item.present_days || 0) + ((item.half_days || 0) * 0.5)) / (item.total_working_days || 1) * 100).toFixed(1)}%`
+            : '0%'
+        };
+      }) || [];
 
       setSummaryData(formattedData);
     } catch (error) {
@@ -115,7 +117,7 @@ export function MonthlySummary({ clientId: propClientId }: MonthlySummaryProps) 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" />

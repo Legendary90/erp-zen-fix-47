@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Building2, Mail, Phone, MapPin, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -130,6 +130,29 @@ export function VendorManagementSection() {
       toast({
         title: "Success",
         description: `Vendor ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+      fetchVendors();
+    }
+  };
+
+  const deleteVendor = async (vendorId: string) => {
+    if (!confirm('Are you sure you want to delete this vendor? This will also delete all related bills.')) return;
+
+    const { error } = await supabase
+      .from('vendors')
+      .delete()
+      .eq('id', vendorId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete vendor",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Vendor deleted successfully",
       });
       fetchVendors();
     }
@@ -314,13 +337,23 @@ export function VendorManagementSection() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleVendorStatus(vendor.id, vendor.is_active)}
-                    >
-                      {vendor.is_active ? 'Deactivate' : 'Activate'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleVendorStatus(vendor.id, vendor.is_active)}
+                      >
+                        {vendor.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteVendor(vendor.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

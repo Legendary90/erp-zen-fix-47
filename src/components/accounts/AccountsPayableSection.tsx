@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CreditCard, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Plus, CreditCard, Clock, CheckCircle, AlertTriangle, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -189,6 +189,29 @@ export function AccountsPayableSection() {
       toast({
         title: "Success",
         description: "Bill status updated successfully",
+      });
+      fetchData();
+    }
+  };
+
+  const deleteBill = async (billId: string) => {
+    if (!confirm('Are you sure you want to delete this bill?')) return;
+
+    const { error } = await supabase
+      .from('bills')
+      .delete()
+      .eq('id', billId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete bill",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Bill deleted successfully",
       });
       fetchData();
     }
@@ -422,6 +445,14 @@ export function AccountsPayableSection() {
                           Mark Paid
                         </Button>
                       )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteBill(bill.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Calendar, Lock, Unlock } from 'lucide-react';
+import { Plus, Calendar, Lock, Unlock, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -131,6 +131,29 @@ export function AccountingPeriodsSection() {
       toast({
         title: "Success",
         description: `Period ${newStatus === 'active' ? 'activated' : 'closed'} successfully`,
+      });
+      fetchPeriods();
+    }
+  };
+
+  const deletePeriod = async (periodId: string) => {
+    if (!confirm('Are you sure you want to delete this accounting period? This will also delete all related data.')) return;
+
+    const { error } = await supabase
+      .from('accounting_periods')
+      .delete()
+      .eq('id', periodId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete period",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Period deleted successfully",
       });
       fetchPeriods();
     }
@@ -278,14 +301,25 @@ export function AccountingPeriodsSection() {
                   <TableCell>{new Date(period.end_date).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(period.status)}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => togglePeriodStatus(period.id, period.status)}
-                      disabled={period.status === 'locked'}
-                    >
-                      {period.status === 'active' ? 'Close' : 'Activate'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => togglePeriodStatus(period.id, period.status)}
+                        disabled={period.status === 'locked'}
+                      >
+                        {period.status === 'active' ? 'Close' : 'Activate'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deletePeriod(period.id)}
+                        className="text-destructive hover:text-destructive"
+                        disabled={period.status === 'active'}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

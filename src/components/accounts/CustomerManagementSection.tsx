@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Users, Mail, Phone, MapPin, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -134,6 +134,29 @@ export function CustomerManagementSection() {
       toast({
         title: "Success",
         description: `Customer ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+      fetchCustomers();
+    }
+  };
+
+  const deleteCustomer = async (customerId: string) => {
+    if (!confirm('Are you sure you want to delete this customer? This will also delete all related invoices.')) return;
+
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', customerId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete customer",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Customer deleted successfully",
       });
       fetchCustomers();
     }
@@ -344,13 +367,23 @@ export function CustomerManagementSection() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleCustomerStatus(customer.id, customer.is_active)}
-                    >
-                      {customer.is_active ? 'Deactivate' : 'Activate'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleCustomerStatus(customer.id, customer.is_active)}
+                      >
+                        {customer.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteCustomer(customer.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
