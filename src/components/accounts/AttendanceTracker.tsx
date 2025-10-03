@@ -91,7 +91,19 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
 
         if (error) throw error;
       } else {
-        // Create new record
+        // Create new record - get active period first
+        const { data: periodData } = await supabase
+          .rpc('get_active_period', { p_client_id: clientId });
+        
+        if (!periodData) {
+          toast({
+            title: "Error",
+            description: "No active accounting period found. Please create one first.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const { error } = await supabase
           .from('employee_attendance')
           .insert({
@@ -100,6 +112,7 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
             date: dateStr,
             status: attendanceStatus,
             notes: notes.trim() || null,
+            period_id: periodData,
           });
 
         if (error) throw error;
