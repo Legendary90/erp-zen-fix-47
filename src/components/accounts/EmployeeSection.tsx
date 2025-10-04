@@ -33,7 +33,7 @@ interface Employee {
 }
 
 interface EmployeeMonthlySummary {
-  total_working_days: number;
+  present_days: number;
   absent_days: number;
   leave_days: number;
   half_days: number;
@@ -114,7 +114,7 @@ export function EmployeeSection() {
       
       summaries?.forEach(item => {
         summaryMap[item.employee_id] = {
-          total_working_days: item.total_working_days || 0,
+          present_days: item.present_days || 0,
           absent_days: item.absent_days || 0,
           leave_days: item.leave_days || 0,
           half_days: item.half_days || 0
@@ -579,7 +579,7 @@ export function EmployeeSection() {
                       <TableHead className="font-semibold">Position</TableHead>
                       <TableHead className="font-semibold">Department</TableHead>
                       <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold text-center">Total Days</TableHead>
+                      <TableHead className="font-semibold text-center">Present</TableHead>
                       <TableHead className="font-semibold text-center">Absent</TableHead>
                       <TableHead className="font-semibold text-center">Leave</TableHead>
                       <TableHead className="font-semibold text-center">Half Days</TableHead>
@@ -617,8 +617,8 @@ export function EmployeeSection() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
-                              <Badge variant="outline" className="font-mono">
-                                {summary?.total_working_days || 0}
+                              <Badge variant="outline" className="font-mono bg-green-50 text-green-700 border-green-200">
+                                {summary?.present_days || 0}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
