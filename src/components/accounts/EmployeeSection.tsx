@@ -34,11 +34,9 @@ interface Employee {
 
 interface EmployeeMonthlySummary {
   total_working_days: number;
-  present_days: number;
   absent_days: number;
   leave_days: number;
   half_days: number;
-  attendance_percentage: string;
 }
 
 export function EmployeeSection() {
@@ -117,13 +115,9 @@ export function EmployeeSection() {
       summaries?.forEach(item => {
         summaryMap[item.employee_id] = {
           total_working_days: item.total_working_days || 0,
-          present_days: item.present_days || 0,
           absent_days: item.absent_days || 0,
           leave_days: item.leave_days || 0,
-          half_days: item.half_days || 0,
-          attendance_percentage: (item.total_working_days || 0) > 0 
-            ? `${(((item.present_days || 0) + ((item.half_days || 0) * 0.5)) / (item.total_working_days || 1) * 100).toFixed(1)}%`
-            : '0%'
+          half_days: item.half_days || 0
         };
       });
 
@@ -586,18 +580,16 @@ export function EmployeeSection() {
                       <TableHead className="font-semibold">Department</TableHead>
                       <TableHead className="font-semibold">Status</TableHead>
                       <TableHead className="font-semibold text-center">Total Days</TableHead>
-                      <TableHead className="font-semibold text-center">Present</TableHead>
                       <TableHead className="font-semibold text-center">Absent</TableHead>
                       <TableHead className="font-semibold text-center">Leave</TableHead>
                       <TableHead className="font-semibold text-center">Half Days</TableHead>
-                      <TableHead className="font-semibold text-center">Attendance %</TableHead>
                       <TableHead className="font-semibold text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {employees.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                           No employees found. Add your first employee to get started.
                         </TableCell>
                       </TableRow>
@@ -630,11 +622,6 @@ export function EmployeeSection() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
-                              <Badge variant="outline" className="font-mono bg-green-50 text-green-700 border-green-200">
-                                {summary?.present_days || 0}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
                               <Badge variant="outline" className="font-mono bg-red-50 text-red-700 border-red-200">
                                 {summary?.absent_days || 0}
                               </Badge>
@@ -647,11 +634,6 @@ export function EmployeeSection() {
                             <TableCell className="text-center">
                               <Badge variant="outline" className="font-mono bg-orange-50 text-orange-700 border-orange-200">
                                 {summary?.half_days || 0}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant="outline" className="font-mono font-semibold bg-primary/10 text-primary border-primary/30">
-                                {summary?.attendance_percentage || '0%'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -684,7 +666,11 @@ export function EmployeeSection() {
         </TabsContent>
         
         <TabsContent value="attendance" className="space-y-4">
-          <AttendanceTracker employees={employees} clientId={clientId || ''} />
+          <AttendanceTracker 
+            employees={employees} 
+            clientId={clientId || ''} 
+            onAttendanceMarked={fetchMonthlySummaries}
+          />
         </TabsContent>
       </Tabs>
     </div>

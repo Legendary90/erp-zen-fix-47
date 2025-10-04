@@ -22,7 +22,7 @@ interface AttendanceRecord {
   id: string;
   employee_id: string;
   date: string;
-  status: 'present' | 'absent' | 'leave';
+  status: 'present' | 'absent' | 'leave' | 'half_day';
   notes?: string;
   client_id: string;
   period_id?: string;
@@ -31,15 +31,16 @@ interface AttendanceRecord {
 interface AttendanceTrackerProps {
   employees: Employee[];
   clientId: string;
+  onAttendanceMarked?: () => void;
 }
 
-export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProps) {
+export function AttendanceTracker({ employees, clientId, onAttendanceMarked }: AttendanceTrackerProps) {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | 'leave'>('present');
+  const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | 'leave' | 'half_day'>('present');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -125,6 +126,9 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
         description: `Attendance marked for ${selectedEmployee.name}`,
       });
 
+      // Notify parent component to refresh
+      onAttendanceMarked?.();
+
       setShowDialog(false);
       setNotes('');
       setSelectedEmployee(null);
@@ -152,6 +156,8 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
         return <X className="h-4 w-4 text-red-600" />;
       case 'leave':
         return <Clock className="h-4 w-4 text-yellow-600" />;
+      case 'half_day':
+        return <Clock className="h-4 w-4 text-blue-600" />;
       default:
         return <div className="h-4 w-4 rounded-full border-2 border-gray-300" />;
     }
@@ -222,7 +228,7 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
                 
                 <div>
                   <Label className="text-sm font-medium">Status</Label>
-                    <Select value={attendanceStatus} onValueChange={(value: 'present' | 'absent' | 'leave') => setAttendanceStatus(value)}>
+                    <Select value={attendanceStatus} onValueChange={(value: 'present' | 'absent' | 'leave' | 'half_day') => setAttendanceStatus(value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -230,6 +236,7 @@ export function AttendanceTracker({ employees, clientId }: AttendanceTrackerProp
                         <SelectItem value="present">Present</SelectItem>
                         <SelectItem value="absent">Absent</SelectItem>
                         <SelectItem value="leave">On Leave</SelectItem>
+                        <SelectItem value="half_day">Half Day</SelectItem>
                       </SelectContent>
                     </Select>
                 </div>
