@@ -86,25 +86,32 @@ const AdminDashboard: React.FC = () => {
     if (!selectedClient) return;
 
     try {
+      // Only include password_hash if it's not empty
+      const updateData = { ...editForm };
+      if (!editForm.password_hash || editForm.password_hash.trim() === '') {
+        delete updateData.password_hash;
+      }
+
       const { error } = await supabase
         .from('clients')
-        .update(editForm)
+        .update(updateData)
         .eq('id', selectedClient.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Client updated successfully"
+        description: "Client information updated successfully"
       });
       
       setIsEditModalOpen(false);
+      setEditForm({});
       loadClients();
     } catch (error) {
       console.error('Error updating client:', error);
       toast({
         title: "Error",
-        description: "Failed to update client",
+        description: "Failed to update client information",
         variant: "destructive"
       });
     }
@@ -141,16 +148,35 @@ const AdminDashboard: React.FC = () => {
 
   const toggleClientAccess = async (client: Client) => {
     try {
+      const newAccessStatus = !client.access_status;
+      const updateData: any = { 
+        access_status: newAccessStatus 
+      };
+      
+      // When enabling access, activate subscription and set dates
+      if (newAccessStatus) {
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setMonth(endDate.getMonth() + 1);
+        
+        updateData.subscription_status = 'ACTIVE';
+        updateData.subscription_start_date = now.toISOString();
+        updateData.subscription_end_date = endDate.toISOString();
+      } else {
+        // When disabling access, set subscription to inactive
+        updateData.subscription_status = 'INACTIVE';
+      }
+      
       const { error } = await supabase
         .from('clients')
-        .update({ access_status: !client.access_status })
+        .update(updateData)
         .eq('id', client.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Client access ${!client.access_status ? 'enabled' : 'disabled'}`
+        description: `Client access ${newAccessStatus ? 'enabled and subscription activated' : 'disabled'}`
       });
       
       loadClients();

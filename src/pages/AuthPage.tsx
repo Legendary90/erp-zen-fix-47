@@ -86,7 +86,7 @@ const AuthPage: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">InviX ERP System</h1>
-          <p className="text-muted-foreground">Sign in to your account or create a new one</p>
+          <p className="text-muted-foreground">Access your business management dashboard</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -105,7 +105,7 @@ const AuthPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Client Login</CardTitle>
-                <CardDescription>Enter your company credentials to access your ERP dashboard</CardDescription>
+                <CardDescription>Enter your credentials to access your dashboard</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleClientLogin} className="space-y-4">
@@ -146,7 +146,7 @@ const AuthPage: React.FC = () => {
                   Admin Login
                   <Badge variant="destructive">RESTRICTED</Badge>
                 </CardTitle>
-                <CardDescription>Administrator access only. Default: admin / admin123</CardDescription>
+                <CardDescription>Administrator access only</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -184,7 +184,7 @@ const AuthPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Register New Client</CardTitle>
-                <CardDescription>Create a new company account for ERP access</CardDescription>
+                <CardDescription>Create a new account to get started</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
@@ -245,7 +245,7 @@ const AuthPage: React.FC = () => {
                     {isLoading ? 'Registering...' : 'Register Company'}
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
-                    Registration is auto-approved. You can start using the system immediately.
+                    Your account will be reviewed and activated by an administrator. You will receive confirmation once approved.
                   </p>
                 </form>
               </CardContent>
