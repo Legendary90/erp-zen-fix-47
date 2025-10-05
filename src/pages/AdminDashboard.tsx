@@ -285,6 +285,7 @@ const AdminDashboard: React.FC = () => {
                   <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Subscription</TableHead>
+                  <TableHead>Subscription End</TableHead>
                   <TableHead>Access</TableHead>
                   <TableHead>Last Login</TableHead>
                   <TableHead>Actions</TableHead>
@@ -301,6 +302,18 @@ const AdminDashboard: React.FC = () => {
                       <Badge variant={client.subscription_status === 'ACTIVE' ? 'default' : 'secondary'}>
                         {client.subscription_status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {client.subscription_end ? (
+                        <div className="text-sm">
+                          <div>{new Date(client.subscription_end).toLocaleDateString()}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.ceil((new Date(client.subscription_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                          </div>
+                        </div>
+                      ) : (
+                        'N/A'
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge 
