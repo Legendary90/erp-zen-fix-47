@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -317,6 +317,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cash_book_entries: {
+        Row: {
+          account_name: string
+          account_type: string
+          amount: number
+          client_id: string
+          contra_account: string | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          narration: string | null
+          particulars: string
+          period_id: string
+          posted_to_ledger: boolean | null
+          transaction_type: string
+          updated_at: string | null
+          voucher_number: string | null
+        }
+        Insert: {
+          account_name: string
+          account_type: string
+          amount?: number
+          client_id: string
+          contra_account?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          narration?: string | null
+          particulars: string
+          period_id: string
+          posted_to_ledger?: boolean | null
+          transaction_type: string
+          updated_at?: string | null
+          voucher_number?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_type?: string
+          amount?: number
+          client_id?: string
+          contra_account?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          narration?: string | null
+          particulars?: string
+          period_id?: string
+          posted_to_ledger?: boolean | null
+          transaction_type?: string
+          updated_at?: string | null
+          voucher_number?: string | null
+        }
+        Relationships: []
       }
       challans: {
         Row: {

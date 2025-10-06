@@ -11,6 +11,7 @@ import { FinancialRecordsSection } from '@/components/accounts/FinancialRecordsS
 import { LegalComplianceSection } from '@/components/accounts/LegalComplianceSection';
 import { EmployeeSection } from '@/components/accounts/EmployeeSection';
 import { CustomerSalesSection } from '@/components/accounts/CustomerSalesSection';
+import { GeneralLedgerSection } from '@/components/accounts/GeneralLedgerSection';
 
 export function AccountsTab() {
   const [activeAccountsTab, setActiveAccountsTab] = useState('sales');
@@ -47,12 +48,13 @@ export function AccountsTab() {
       </div>
 
       <Tabs value={activeAccountsTab} onValueChange={setActiveAccountsTab} className="w-full">
-        <TabsList className="grid grid-cols-2 lg:grid-cols-6 w-full mb-6 bg-card border shadow-sm">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-7 w-full mb-6 bg-card border shadow-sm">
           <TabsTrigger value="sales" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Revenue Management</TabsTrigger>
           <TabsTrigger value="purchases" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Procurement</TabsTrigger>
           <TabsTrigger value="expenses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Expense Control</TabsTrigger>
           <TabsTrigger value="assets" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Asset Management</TabsTrigger>
           <TabsTrigger value="banking" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Treasury</TabsTrigger>
+          <TabsTrigger value="ledger" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">General Ledger</TabsTrigger>
           <TabsTrigger value="reports" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">Analytics & Reports</TabsTrigger>
         </TabsList>
 
@@ -74,6 +76,10 @@ export function AccountsTab() {
 
         <TabsContent value="banking">
           <BankingSection />
+        </TabsContent>
+
+        <TabsContent value="ledger">
+          <GeneralLedgerSection />
         </TabsContent>
 
         <TabsContent value="reports">

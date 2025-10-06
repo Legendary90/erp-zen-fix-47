@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExcelTable } from '@/components/common/ExcelTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { CashBookSection } from './CashBookSection';
 
 interface LedgerEntry {
   id: string;
@@ -29,6 +31,7 @@ interface AccountingPeriod {
 }
 
 export function GeneralLedgerSection() {
+  const [activeTab, setActiveTab] = useState('ledger');
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [periods, setPeriods] = useState<AccountingPeriod[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
@@ -233,9 +236,23 @@ export function GeneralLedgerSection() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-2xl font-bold">General Ledger</h3>
-          <p className="text-muted-foreground">Track all financial transactions and account balances</p>
+          <h3 className="text-2xl font-bold">General Ledger & Cash Book</h3>
+          <p className="text-muted-foreground">Comprehensive ledger management with automated cash book integration</p>
         </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 w-full max-w-md">
+          <TabsTrigger value="ledger">General Ledger</TabsTrigger>
+          <TabsTrigger value="cashbook">Cash Book</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ledger" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h4 className="text-xl font-semibold">General Ledger Entries</h4>
+              <p className="text-muted-foreground text-sm">All financial transactions including automated cash book postings</p>
+            </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -361,6 +378,12 @@ export function GeneralLedgerSection() {
         showActions={true}
         className="min-h-[400px]"
       />
+        </TabsContent>
+
+        <TabsContent value="cashbook">
+          <CashBookSection />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
